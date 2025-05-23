@@ -1,0 +1,60 @@
+{
+  "menu": [
+    {
+      "url": "/",
+      "name": "Dashboards",
+      "icon": "menu-icon tf-icons bx bx-home-circle",
+      "slug": "dashboard",
+      "badge": [
+        "danger",
+        "5"
+      ],
+      "submenu": [
+        {
+          "url": "/",
+          "name": "Análisis",
+          "slug": "dashboard-analytics"
+        }
+      ]
+    },
+    {
+      "menuHeader": "Clientes & Config"
+    },
+    {
+      "url": "/client/newClient",
+      "name": "Nuevo Cliente",
+      "icon": "menu-icon tf-icons bx bx-envelope",
+      "slug": "app-email"
+    },
+    {
+      "url": "/client/clientList",
+      "name": "Lista Clientes",
+      "icon": "menu-icon tf-icons bx bx-chat",
+      "slug": "app-chat"
+    },
+    {
+      "url": "/client/clientCalendario",
+      "name": "Calendario",
+      "icon": "menu-icon tf-icons bx bx-calendar",
+      "slug": "app-calendar"
+    },
+    {
+      "url": "/client/clientReunion",
+      "name": "Aprobados",
+      "icon": "menu-icon tf-icons bx bx-grid",
+      "slug": "app-kanban"
+    },
+    {
+      "url": "/cotizaciones/Nueva-Cotizacion",
+      "name": "Nueva Cotizacion",
+      "icon": "menu-icon tf-icons bx bx-grid",
+      "slug": "app-kanban"
+    },
+    {
+      "url": "/modulo",
+      "name": "Modulo",
+      "icon": "menu-icon tf-icons bx bx-grid",
+      "slug": "app-kanban"
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+user_id;nombre;empresa;telefono;email;tipo_cliente;servicios;mensaje;status;correo;whatsapp;reunion;contrato;fecharegistro;photo;proceso;tecnico;cotizacion;events_id;llamada;levantamiento
+10;GARCIA TAPIA MOISES ENRIQUE;3D MEDICAL S.A.C.;16409737;moises.garcia@3dmedicalsac.com;INTERMEDIO;CCTV;null;PENDIENTE;PENDIENTE;PENDIENTE;PENDIENTE;PENDIENTE;22/08/2024;null;PENDIENTE;PENDIENTE;PENDIENTE;4;PENDIENTE;PENDIENTE

@@ -1,0 +1,126 @@
+[07-Oct-2024 08:09:43 America/Lima] Illuminate\Support\Collection Object
+(
+    [items:protected] => Array
+        (
+            [0] => Array
+                (
+                    [user_id] => 19
+                    [correos_si] => 173
+                    [llamadas_si] => 38
+                    [whasat_si] => 38
+                    [name] => Edith Natalie
+                )
+
+            [1] => Array
+                (
+                    [user_id] => 22
+                    [correos_si] => 202
+                    [llamadas_si] => 146
+                    [whasat_si] => 15
+                    [name] => Efrain
+                )
+
+            [2] => Array
+                (
+                    [user_id] => 23
+                    [correos_si] => 153
+                    [llamadas_si] => 117
+                    [whasat_si] => 101
+                    [name] => Natalia
+                )
+
+            [3] => Array
+                (
+                    [user_id] => 24
+                    [correos_si] => 177
+                    [llamadas_si] => 160
+                    [whasat_si] => 51
+                    [name] => Ronald Agipe
+                )
+
+            [4] => Array
+                (
+                    [user_id] => 25
+                    [correos_si] => 142
+                    [llamadas_si] => 17
+                    [whasat_si] => 15
+                    [name] => GRECIA
+                )
+
+            [5] => Array
+                (
+                    [user_id] => 27
+                    [correos_si] => 147
+                    [llamadas_si] => 0
+                    [whasat_si] => 0
+                    [name] => MARICIELO TENORIO
+                )
+
+        )
+
+    [escapeWhenCastingToString:protected] => 
+)
+
+[07-Oct-2024 08:09:43 America/Lima] Illuminate\Support\Collection Object
+(
+    [items:protected] => Array
+        (
+            [0] => Array
+                (
+                    [user_id] => 19
+                    [correos_si] => 173
+                    [llamadas_si] => 38
+                    [whasat_si] => 38
+                    [name] => Edith Natalie
+                )
+
+            [1] => Array
+                (
+                    [user_id] => 22
+                    [correos_si] => 202
+                    [llamadas_si] => 146
+                    [whasat_si] => 15
+                    [name] => Efrain
+                )
+
+            [2] => Array
+                (
+                    [user_id] => 23
+                    [correos_si] => 153
+                    [llamadas_si] => 117
+                    [whasat_si] => 101
+                    [name] => Natalia
+                )
+
+            [3] => Array
+                (
+                    [user_id] => 24
+                    [correos_si] => 177
+                    [llamadas_si] => 160
+                    [whasat_si] => 51
+                    [name] => Ronald Agipe
+                )
+
+            [4] => Array
+                (
+                    [user_id] => 25
+                    [correos_si] => 142
+                    [llamadas_si] => 17
+                    [whasat_si] => 15
+                    [name] => GRECIA
+                )
+
+            [5] => Array
+                (
+                    [user_id] => 27
+                    [correos_si] => 147
+                    [llamadas_si] => 0
+                    [whasat_si] => 0
+                    [name] => MARICIELO TENORIO
+                )
+
+        )
+
+    [escapeWhenCastingToString:protected] => 
+)
+
