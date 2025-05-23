@@ -164,6 +164,51 @@
                         </div>
                     </div>
 
+                    <div class="mb-3">
+                        <input type="file" class="form-control" id="imagenes" name="imagenes[]" multiple>
+                        <button type="button" class="btn btn-secondary mt-2" id="subirImagenesBtn">
+                            <i class="fas fa-upload"></i> Subir Imágenes
+                        </button>
+
+                    </div>
+
+
+                    @if($modulo->imagenes->count())
+                    <div class="mb-4">
+                        <label class="form-label"><i class="fas fa-images me-2"></i>Imágenes del módulo</label>
+                        <div class="row g-3">
+                            @foreach($modulo->imagenes as $imagen)
+                            <div class="col-md-3 text-center">
+                                <div class="card">
+                                    <img src="{{ asset('storage/modulos/' . $imagen->nombre_archivo) }}"
+                                        class="card-img-top img-thumbnail" alt="Imagen del módulo"
+                                        style="max-height: 180px; object-fit: cover;">
+                                    <div class="card-body p-2">
+                                        @if($imagen->es_principal)
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-star me-1"></i> Principal
+                                        </span>
+                                        @else
+                                        <span class="badge bg-secondary">Secundaria</span>
+                                        @endif
+                                        <form action="{{ route('imagenes.destroy', $imagen->id) }}" method="POST"
+                                            class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm mt-2">
+                                                <i class="fas fa-trash-alt"></i> Eliminar
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+
+                        </div>
+                    </div>
+                    @endif
+
+
                     <div class="d-flex justify-content-between">
                         <a href="{{ route('modulo-list') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i> Cancelar
@@ -300,6 +345,42 @@
             .finally(() => {
                 submitButton.innerHTML = originalButtonText;
                 submitButton.disabled = false;
+            });
+    });
+</script>
+
+<script>
+    document.getElementById('subirImagenesBtn').addEventListener('click', function() {
+        const input = document.getElementById('imagenes');
+        const files = input.files;
+
+        if (!files.length) {
+            Swal.fire('Advertencia', 'Selecciona al menos una imagen para subir.', 'warning');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('input[name="_token"]').value);
+        for (const file of files) {
+            formData.append('imagenes[]', file);
+        }
+
+        fetch(`{{ route('modulos.uploadImagenes', $modulo->id) }}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Éxito', data.message, 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    throw new Error(data.message);
+                }
+            })
+            .catch(err => {
+                Swal.fire('Error', err.message, 'error');
             });
     });
 </script>

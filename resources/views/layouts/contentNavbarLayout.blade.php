@@ -55,7 +55,7 @@ $container = ($container ?? 'container-xxl');
 
                     </div>
                     <!-- / Content -->
-                    @yield('vendor-script')
+                    <!-- @yield('vendor-script') -->
                     @stack('scripts')
 
 

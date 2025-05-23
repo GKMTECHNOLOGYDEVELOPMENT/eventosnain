@@ -9,35 +9,49 @@ class Cotizacion extends Model
 {
     use HasFactory;
 
-    // Define la tabla asociada con el modelo
     protected $table = 'cotizaciones';
+    protected $primaryKey = 'id';
 
-    // Define la clave primaria
-    protected $primaryKey = 'id_cotizaciones';
-
-    // Define los campos que son asignables en masa
     protected $fillable = [
-        'recipient_email',
-        'subject',
-        'message',
-        'user_id',
-        'attachment',
+        'codigo_cotizacion',
+        'fecha_emision',
         'cliente_id',
-        'money', // Agrega el campo 'money' aquí
+        'validez',
+        'condiciones_comerciales',
+        'observaciones',
+        'subtotal_sin_igv',
+        'igv',
+        'total_con_igv',
+        'estado'
     ];
 
-    // Relación con el modelo User
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
+    protected $dates = [
+        'fecha_emision',
+        'created_at',
+        'updated_at'
+    ];
 
-    // Relación con el modelo Cliente
+    // Relación con el cliente
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
     }
 
-    // Desactivar los timestamps
-    public $timestamps = false;
+    // Relación con los productos/modulos de la cotización
+    public function productos()
+    {
+        return $this->hasMany(CotizacionProducto::class, 'cotizacion_id');
+    }
+
+    // Método para calcular la fecha de vencimiento
+    public function getFechaVencimientoAttribute()
+    {
+        return $this->fecha_emision->addDays($this->validez);
+    }
+
+    // Método para verificar si está vencida
+    public function getEstaVencidaAttribute()
+    {
+        return now()->greaterThan($this->getFechaVencimientoAttribute());
+    }
 }

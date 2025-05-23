@@ -19,6 +19,7 @@ use App\Models\EventUser;
 use App\Models\Informacion;
 use App\Models\Llamada;
 use App\Models\Modulo;
+use App\Models\ModuloImagen;
 use App\Models\Observacion;
 use App\Models\Reunion;
 use App\Models\Salida;
@@ -29,6 +30,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ModuloController extends Controller
@@ -54,7 +56,8 @@ class ModuloController extends Controller
 
     public function store(Request $request)
     {
-        // Validación de datos
+        Log::info('Inicio de store modulo', $request->all());
+
         $validator = Validator::make($request->all(), [
             'codigo_modulo' => 'required|unique:modulos|max:20',
             'modelo' => 'required|max:50',
@@ -64,22 +67,29 @@ class ModuloController extends Controller
             'stock_total' => 'required|integer|min:0',
             'stock_minimo' => 'required|integer|min:0',
             'fecha_registro' => 'required|date',
-            'estado' => 'required|boolean'
+            'estado' => 'required|boolean',
+            'imagenes.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'imagen_principal' => 'nullable|integer'
         ], [
             'codigo_modulo.unique' => 'El código del módulo ya existe',
             'precio_venta.gte' => 'El precio de venta debe ser mayor o igual al precio de compra',
-            'stock_minimo.lte' => 'El stock mínimo no puede ser mayor al stock total'
+            'stock_minimo.lte' => 'El stock mínimo no puede ser mayor al stock total',
+            'imagenes.*.max' => 'Cada imagen no debe superar los 2MB',
+            'imagenes.*.image' => 'Cada archivo debe ser una imagen válida',
+            'imagenes.*.mimes' => 'Las imágenes deben estar en formato: jpeg, png, jpg o gif'
         ]);
-
         if ($validator->fails()) {
+            Log::warning('Errores de validación', $validator->errors()->toArray());
+
             return response()->json([
                 'success' => false,
                 'errors' => $validator->errors()
             ], 422);
         }
 
+        DB::beginTransaction();
+
         try {
-            // Crear el módulo
             $modulo = Modulo::create([
                 'codigo_modulo' => $request->codigo_modulo,
                 'marca' => 'INTIFOLD',
@@ -93,12 +103,56 @@ class ModuloController extends Controller
                 'estado' => $request->estado
             ]);
 
+            Log::info('Módulo creado', ['modulo_id' => $modulo->id]);
+
+            if ($request->hasFile('imagenes')) {
+                $files = $request->file('imagenes');
+                Log::info('Archivos recibidos', ['cantidad' => count($files)]);
+                $principalIndex = $request->input('imagen_principal');
+
+                // Carpeta destino física en public/storage/modulos
+                $destinationPath = public_path('storage/modulos');
+
+                // Crear carpeta si no existe
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+
+                foreach ($files as $index => $file) {
+                    $filename = time() . '_' . $file->getClientOriginalName();
+
+                    // Mover archivo a public/storage/modulos
+                    $file->move($destinationPath, $filename);
+
+                    Log::info('Guardando imagen', [
+                        'filename' => $filename,
+                        'mime' => $file->getClientMimeType(),
+                        'principal' => ($index == $principalIndex) ? 1 : 0
+                    ]);
+
+                    $modulo->imagenes()->create([
+                        'nombre_archivo' => $filename,
+                        'mime_type' => $file->getClientMimeType(),
+                        'imagen_data' => null,
+                        'es_principal' => ($index == $principalIndex) ? 1 : 0,
+                    ]);
+                }
+            } else {
+                Log::info('No se recibieron imágenes');
+            }
+
+
+            DB::commit();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Módulo registrado correctamente',
                 'data' => $modulo
             ]);
         } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error al registrar módulo', ['error' => $e->getMessage()]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error al registrar el módulo: ' . $e->getMessage()
@@ -107,10 +161,17 @@ class ModuloController extends Controller
     }
 
 
+
+
     public function edit(Modulo $modulo)
     {
+        $modulo->load(['imagenes' => function ($q) {
+            $q->orderByDesc('es_principal'); // Principal primero
+        }]);
+
         return view('content.modulo.edit', compact('modulo'));
     }
+
 
     public function update(Request $request, Modulo $modulo)
     {
@@ -147,6 +208,71 @@ class ModuloController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al eliminar el módulo: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function destroyImagen($id)
+    {
+        $imagen = ModuloImagen::findOrFail($id);
+
+        // Eliminar el archivo de la imagen
+        if (Storage::exists('public/modulos/' . $imagen->nombre_archivo)) {
+            Storage::delete('public/modulos/' . $imagen->nombre_archivo);
+        }
+
+        // Eliminar el registro de la base de datos
+        $imagen->delete();
+
+        return redirect()->route('modulos.edit', $imagen->modulo_id)
+            ->with('success', 'Imagen eliminada correctamente.');
+    }
+
+
+    public function uploadImagenes(Request $request, Modulo $modulo)
+    {
+        $request->validate([
+            'imagenes.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120' // Hasta 5MB
+        ]);
+
+        try {
+            $urls = [];
+
+            // Ruta destino: C:\xampp\htdocs\eventosnain\public\storage\modulos
+            $destinationPath = public_path('storage/modulos');
+
+            // Crear carpeta si no existe
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            foreach ($request->file('imagenes') as $file) {
+                $filename = time() . '_' . $file->getClientOriginalName();
+
+                // Mover archivo a la ruta física
+                $file->move($destinationPath, $filename);
+
+                // Guardar en base de datos
+                $modulo->imagenes()->create([
+                    'nombre_archivo' => $filename,
+                    'mime_type' => $file->getClientMimeType(),
+                    'imagen_data' => null,
+                    'es_principal' => false
+                ]);
+
+                // Agregar la URL accesible públicamente
+                $urls[] = asset('storage/modulos/' . $filename);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Imágenes subidas correctamente.',
+                'urls' => $urls
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
             ], 500);
         }
     }

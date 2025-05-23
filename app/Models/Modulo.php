@@ -28,4 +28,15 @@ class Modulo extends Model
         'precio_venta' => 'decimal:2',
         'fecha_registro' => 'date'
     ];
+
+    public function imagenes()
+    {
+        return $this->hasMany(ModuloImagen::class, 'modulo_id');
+    }
+
+
+    public function imagenPrincipal()
+    {
+        return $this->hasOne(ModuloImagen::class)->where('es_principal', true);
+    }
 }

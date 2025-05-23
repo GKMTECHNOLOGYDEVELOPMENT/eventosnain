@@ -24,7 +24,7 @@
                 <small class="text-muted float-end">Complete todos los campos</small>
             </div>
             <div class="card-body">
-                <form id="moduloForm" method="POST" action="{{ route('modulos.store') }}">
+                <form id="moduloForm" method="POST" action="{{ route('modulos.store') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -151,6 +151,25 @@
                         </div>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label" for="imagenes">
+                            <i class="fas fa-images me-2"></i>Imágenes del Módulo
+                        </label>
+                        <input type="file" class="form-control" id="imagenes" name="imagenes[]" multiple
+                            accept="image/*">
+                        <small class="text-muted">Puedes seleccionar múltiples imágenes (JPEG, PNG, JPG, GIF)</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="imagen_principal">
+                            <i class="fas fa-star me-2"></i>Imagen Principal
+                        </label>
+                        <select class="form-control" id="imagen_principal" name="imagen_principal">
+                            <option value="">Seleccionar imagen principal</option>
+                            <!-- Las opciones se llenarán dinámicamente con JavaScript -->
+                        </select>
+                    </div>
+
                     <div class="d-flex justify-content-between">
                         <button type="reset" class="btn btn-outline-secondary">
                             <i class="fas fa-eraser me-2"></i> Limpiar
@@ -189,7 +208,6 @@
     });
 </script>
 
-
 <script>
     document.getElementById('moduloForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -198,41 +216,20 @@
         const submitButton = form.querySelector('button[type="submit"]');
         const originalButtonText = submitButton.innerHTML;
 
-        // Mostrar loading
         submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Guardando...';
         submitButton.disabled = true;
 
-        // Convertir campos de moneda
         const formatCurrencyToNumber = (value) => parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
         const precioCompra = formatCurrencyToNumber(form.precio_compra.value);
         const precioVenta = formatCurrencyToNumber(form.precio_venta.value);
 
-        // Validaciones frontend
         let errors = [];
 
-        if (precioCompra < 0) {
-            errors.push("El precio de compra no puede ser negativo");
-        }
-
-        if (precioVenta < 0) {
-            errors.push("El precio de venta no puede ser negativo");
-        }
-
-        if (precioVenta < precioCompra) {
-            errors.push("El precio de venta no puede ser menor al precio de compra");
-        }
-
-        if (form.stock_total.value < 0) {
-            errors.push("El stock total no puede ser negativo");
-        }
-
-        if (form.stock_minimo.value < 0) {
-            errors.push("El stock mínimo no puede ser negativo");
-        }
-
-        // if (parseInt(form.stock_minimo.value) > parseInt(form.stock_total.value)) {
-        //     errors.push("El stock mínimo no puede ser mayor al stock total");
-        // }
+        if (precioCompra < 0) errors.push("El precio de compra no puede ser negativo");
+        if (precioVenta < 0) errors.push("El precio de venta no puede ser negativo");
+        if (precioVenta < precioCompra) errors.push("El precio de venta no puede ser menor al precio de compra");
+        if (form.stock_total.value < 0) errors.push("El stock total no puede ser negativo");
+        if (form.stock_minimo.value < 0) errors.push("El stock mínimo no puede ser negativo");
 
         if (errors.length > 0) {
             Swal.fire({
@@ -245,30 +242,22 @@
             return;
         }
 
-        // Preparar datos
-        const data = {
-            _token: document.querySelector('meta[name="csrf-token"]').content,
-            codigo_modulo: form.codigo_modulo.value,
-            marca: 'INTIFOLD',
-            modelo: form.modelo.value,
-            descripcion: form.descripcion.value,
-            precio_compra: precioCompra,
-            precio_venta: precioVenta,
-            stock_total: form.stock_total.value,
-            stock_minimo: form.stock_minimo.value,
-            fecha_registro: form.fecha_registro.value,
-            estado: document.querySelector('input[name="estado"]:checked').value
-        };
+        // ✅ Usamos FormData
+        const formData = new FormData(form);
 
-        // Enviar por AJAX
+        // Set valores numéricos convertidos
+        formData.set('precio_compra', precioCompra);
+        formData.set('precio_venta', precioVenta);
+        formData.set('_token', document.querySelector('meta[name="csrf-token"]').content);
+
         fetch(form.action, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
+                    // ❌ No pongas Content-Type si usas FormData, el navegador lo maneja solo
                 },
-                body: JSON.stringify(data)
+                body: formData
             })
             .then(response => {
                 if (!response.ok) {
@@ -287,6 +276,8 @@
                     timer: 1500
                 });
                 form.reset();
+                document.getElementById('imagen_principal').innerHTML =
+                    '<option value="">Seleccionar imagen principal</option>';
             })
             .catch(error => {
                 let errorMsg = 'Error al guardar';
@@ -306,6 +297,23 @@
                 submitButton.innerHTML = originalButtonText;
                 submitButton.disabled = false;
             });
+    });
+</script>
+
+
+<script>
+    document.getElementById('imagenes').addEventListener('change', function(e) {
+        const select = document.getElementById('imagen_principal');
+        // Limpiar opciones anteriores
+        select.innerHTML = '<option value="">Seleccionar imagen principal</option>';
+
+        // Agregar nuevas opciones
+        Array.from(e.target.files).forEach((file, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = file.name;
+            select.appendChild(option);
+        });
     });
 </script>
 @endsection

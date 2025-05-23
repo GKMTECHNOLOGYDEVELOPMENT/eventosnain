@@ -214,6 +214,10 @@ Route::put('/modulos/actualizar/{modulo}', [ModuloController::class, 'update'])-
 Route::delete('/modulos/{modulo}', [ModuloController::class, 'destroy'])
     ->name('modulos.destroy');
 
+Route::delete('imagenes/{id}', [ModuloController::class, 'destroyImagen'])->name('imagenes.destroy');
+Route::post('/modulos/{modulo}/upload-imagenes', [ModuloController::class, 'uploadImagenes'])->name('modulos.uploadImagenes');
+Route::post('/cotizaciones', [CotizacionController::class, 'store'])->name('cotizaciones.store');
+Route::get('/cotizaciones/{id}/imprimir', [CotizacionController::class, 'imprimir'])->name('cotizaciones.imprimir');
 // User Interface
 Route::get('/ui/accordion', [Accordion::class, 'index'])->name('ui-accordion');
 Route::get('/ui/alerts', [Alerts::class, 'index'])->name('ui-alerts');
