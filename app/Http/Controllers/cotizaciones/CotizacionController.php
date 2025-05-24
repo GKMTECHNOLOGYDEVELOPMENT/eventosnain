@@ -28,6 +28,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Spatie\Browsershot\Browsershot;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -216,8 +217,31 @@ class CotizacionController extends Controller
             ], 500);
         }
     }
-
-
+    public function exportarPdf($id)
+    {
+        $cotizacion = Cotizacion::with([
+            'cliente',
+            'productos.modulo.imagenPrincipal'
+        ])->findOrFail($id);
+    
+        $cotizacion->fecha_emision = \Carbon\Carbon::parse($cotizacion->fecha_emision);
+    
+        $logoFondo = 'data:image/jpg;base64,' . base64_encode(
+            file_get_contents(public_path('assets/img/backgrounds/hoja_membretada.jpg'))
+        );
+    
+        $html = view('content.cotizacion.pdf.index', compact('cotizacion', 'logoFondo'))->render();
+    
+        $pdf = \Spatie\Browsershot\Browsershot::html($html)
+            ->format('A4')
+            ->showBackground()
+            ->pdf();
+    
+        return response($pdf)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="cotizacion-' . $cotizacion->codigo_cotizacion . '.pdf"');
+    }
+    
     public function edit($id)
     {
         $cotizacion = Cotizacion::with('cliente', 'productos')->findOrFail($id);

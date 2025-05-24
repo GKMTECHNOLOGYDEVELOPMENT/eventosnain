@@ -93,6 +93,7 @@
     "jquery": "3.7.0",
     "masonry-layout": "4.2.2",
     "perfect-scrollbar": "1.5.5",
+    "puppeteer": "^24.9.0",
     "select2": "^4.1.0-rc.0"
   }
 }

@@ -35,8 +35,9 @@ class Modulo extends Model
     }
 
 
+    // Modulo.php
     public function imagenPrincipal()
     {
-        return $this->hasOne(ModuloImagen::class)->where('es_principal', true);
+        return $this->hasOne(ModuloImagen::class, 'modulo_id')->where('es_principal', 1);
     }
 }
