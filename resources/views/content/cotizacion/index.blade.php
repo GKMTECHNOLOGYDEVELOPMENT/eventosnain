@@ -40,7 +40,7 @@
 
         <!-- Tabla de cotizaciones -->
         <div id="cotizacionesTableContainer">
-            @include('content.cotizaciones.partials._cotizacionesTable')
+            @include('content.cotizacion.partials._cotizacionTable')
         </div>
     </div>
 </div>

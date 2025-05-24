@@ -54,4 +54,9 @@ class Cotizacion extends Model
     {
         return now()->greaterThan($this->getFechaVencimientoAttribute());
     }
+
+    public function detalleProductos()
+    {
+        return $this->hasMany(CotizacionProducto::class, 'cotizacion_id');
+    }
 }

@@ -225,6 +225,9 @@ Route::get('/cotizaciones/Nueva-Cotizacion', [CotizacionController::class, 'crea
 Route::get('/clientes/search', [CotizacionController::class, 'search'])
     ->name('clientes.search');
 Route::get('/cotizaciones/{id}/pdf', [CotizacionController::class, 'exportarPdf'])->name('cotizaciones.exportarPdf');
+Route::get('/cotizaciones/{cotizacion}/edit', [CotizacionController::class, 'edit'])->name('cotizaciones.edit');
+Route::put('/cotizaciones/update/{cotizacion}', [CotizacionController::class, 'update'])->name('cotizaciones.update');
+
 
 
 // User Interface
