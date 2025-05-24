@@ -71,9 +71,7 @@
         <button onclick="window.print()" class="btn btn-primary me-2">
             <i class="fas fa-print me-2"></i> Imprimir
         </button>
-        <a href="{{ route('cotizaciones.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-2"></i> Volver
-        </a>
+
     </div>
 
     <div class="container">

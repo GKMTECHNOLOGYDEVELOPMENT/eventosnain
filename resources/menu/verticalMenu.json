@@ -45,8 +45,8 @@
       "slug": "app-kanban"
     },
     {
-      "url": "/cotizaciones/Nueva-Cotizacion",
-      "name": "Nueva Cotizacion",
+      "url": "/cotizaciones/",
+      "name": "Cotizaciones",
       "icon": "menu-icon tf-icons bx bx-grid",
       "slug": "app-kanban"
     },

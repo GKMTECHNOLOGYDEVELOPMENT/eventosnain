@@ -216,8 +216,16 @@ Route::delete('/modulos/{modulo}', [ModuloController::class, 'destroy'])
 
 Route::delete('imagenes/{id}', [ModuloController::class, 'destroyImagen'])->name('imagenes.destroy');
 Route::post('/modulos/{modulo}/upload-imagenes', [ModuloController::class, 'uploadImagenes'])->name('modulos.uploadImagenes');
-Route::post('/cotizaciones', [CotizacionController::class, 'store'])->name('cotizaciones.store');
+
+
+Route::get('/cotizaciones', [CotizacionController::class, 'index'])->name('cotizaciones.index');
+Route::post('/cotizaciones/store', [CotizacionController::class, 'store'])->name('cotizaciones.store');
 Route::get('/cotizaciones/{id}/imprimir', [CotizacionController::class, 'imprimir'])->name('cotizaciones.imprimir');
+Route::get('/cotizaciones/Nueva-Cotizacion', [CotizacionController::class, 'create'])->name('cotizacion-newCotizacion')->middleware('auth');
+Route::get('/clientes/search', [CotizacionController::class, 'search'])
+    ->name('clientes.search');
+
+
 // User Interface
 Route::get('/ui/accordion', [Accordion::class, 'index'])->name('ui-accordion');
 Route::get('/ui/alerts', [Alerts::class, 'index'])->name('ui-alerts');

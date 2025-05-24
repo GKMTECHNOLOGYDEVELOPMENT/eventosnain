@@ -37,28 +37,55 @@ class CotizacionController extends Controller
     {
         $usuarioAutenticado = auth()->user();
 
-        // Obtener los clientes con paginación (10 por página)
-        if ($usuarioAutenticado->rol_id == 1 || $usuarioAutenticado->rol_id == 3) {
-            $clientes = Cliente::with('salida')->paginate(10);
-        } else {
-            $clientes = Cliente::with('salida')
-                ->where('user_id', $usuarioAutenticado->id)
-                ->paginate(10);
+        // Obtener las cotizaciones con relaciones y paginación
+        $query = Cotizacion::with(['cliente', 'productos'])
+            ->orderBy('fecha_emision', 'desc');
+
+        // Filtro por rol de usuario
+        if ($usuarioAutenticado->rol_id != 1 && $usuarioAutenticado->rol_id != 3) {
+            // Para usuarios no admin, solo sus cotizaciones relacionadas a sus clientes
+            $query->whereHas('cliente', function ($q) use ($usuarioAutenticado) {
+                $q->where('user_id', $usuarioAutenticado->id);
+            });
         }
 
-        // Obtener reuniones, observaciones y otros datos relacionados
-        $clienteIds = $clientes->pluck('id');
-        $reuniones = Reunion::whereIn('cliente_id', $clienteIds)->get()->groupBy('cliente_id');
-        $usuarios = User::where('rol_id', 1)->get();
-        $observaciones = Observacion::whereIn('id_cliente', $clienteIds)->get()->keyBy('id_cliente');
+        // Búsqueda
+        if (request()->has('search')) {
+            $search = request('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('codigo_cotizacion', 'like', "%$search%")
+                    ->orWhereHas('cliente', function ($q) use ($search) {
+                        $q->where('nombre', 'like', "%$search%")
+                            ->orWhere('empresa', 'like', "%$search%");
+                    });
+            });
+        }
 
-        // Si es una solicitud AJAX, solo devolver la tabla y la paginación
+        // Filtro por estado
+        if (request()->has('estado') && request('estado') != 'todos') {
+            $query->where('estado', request('estado'));
+        }
+
+        $cotizaciones = $query->paginate(10);
+
+        // Para solicitudes AJAX (paginación/búsqueda)
         if (request()->ajax()) {
-            return view('content.client.partials._clientTable', compact('clientes', 'reuniones', 'observaciones'))->render();
+            return view('content.cotizacion.partials._cotizacionTable', compact('cotizaciones'))->render();
         }
 
-        return view('content.client.client-clientList', compact('clientes', 'usuarios', 'reuniones', 'observaciones'));
+        return view('content.cotizacion.index', [
+            'cotizaciones' => $cotizaciones,
+            'estados' => [
+                'pendiente' => 'Pendiente',
+                'aprobada' => 'Aprobada',
+                'rechazada' => 'Rechazada',
+                'vencida' => 'Vencida'
+            ]
+        ]);
     }
+
+
+
 
     public function create()
     {
@@ -108,7 +135,9 @@ class CotizacionController extends Controller
     public function imprimir($id)
     {
         $cotizacion = Cotizacion::with(['cliente', 'productos.modulo'])->findOrFail($id);
-        return view('cotizaciones.imprimir', compact('cotizacion'));
+        $cotizacion->fecha_emision = \Carbon\Carbon::parse($cotizacion->fecha_emision);
+
+        return view('content.cotizacion.imprimir', compact('cotizacion'));
     }
 
 
@@ -172,6 +201,7 @@ class CotizacionController extends Controller
 
             return response()->json([
                 'message' => 'Cotización creada exitosamente',
+                'id' => $cotizacion->id, // Asegúrate de incluir el ID
                 'redirect' => route('cotizacion-newCotizacion')
             ], 201);
         } catch (\Exception $e) {
