@@ -217,25 +217,29 @@ class CotizacionController extends Controller
     }
     public function exportarPdf($id)
     {
-        $cotizacion = Cotizacion::with(['cliente', 'productos.modulo'])->findOrFail($id);
+        $cotizacion = Cotizacion::with([
+            'cliente',
+            'productos.modulo.imagenPrincipal'
+        ])->findOrFail($id);
+    
         $cotizacion->fecha_emision = \Carbon\Carbon::parse($cotizacion->fecha_emision);
-
-        // Cargar imagen de fondo como base64
-        $logoFondo = 'data:image/jpg;base64,' . base64_encode(file_get_contents(public_path('assets/img/backgrounds/hoja_membretada.jpg')));
-
-        // Renderizar vista con imagen de fondo
+    
+        $logoFondo = 'data:image/jpg;base64,' . base64_encode(
+            file_get_contents(public_path('assets/img/backgrounds/hoja_membretada.jpg'))
+        );
+    
         $html = view('content.cotizacion.pdf.index', compact('cotizacion', 'logoFondo'))->render();
-
-        // Generar PDF sin guardarlo en disco
+    
         $pdf = \Spatie\Browsershot\Browsershot::html($html)
             ->format('A4')
             ->showBackground()
             ->pdf();
-
+    
         return response($pdf)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'inline; filename="cotizacion-' . $cotizacion->codigo_cotizacion . '.pdf"');
     }
+    
     public function edit($id)
     {
         $cotizacion = Cotizacion::with('cliente', 'productos')->findOrFail($id);

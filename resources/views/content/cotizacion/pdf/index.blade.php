@@ -62,15 +62,32 @@
                 <th class="p-2 rounded-tr-lg">Total</th>
             </tr>
         </thead>
-        
+
         <tbody>
             @foreach ($cotizacion->productos as $item)
                 <tr class="border-t border-gray-300">
-                    <td class="p-2 text-center">
-                        @if ($item->modulo->imagen)
-                            <img src="{{ public_path('storage/' . $item->modulo->imagen) }}" class="img-box mx-auto">
+                    <td class="p-2 text-center uppercase">
+                        @php
+                            $moduloId = $item->modulo->id;
+                            $imagen = \App\Models\ModuloImagen::where('modulo_id', $moduloId)
+                                ->where('es_principal', true)
+                                ->first();
+
+                            $ruta = $imagen ? public_path('storage/modulos/' . $imagen->nombre_archivo) : null;
+                            $imagenBase64 =
+                                $ruta && file_exists($ruta)
+                                    ? 'data:' .
+                                        $imagen->mime_type .
+                                        ';base64,' .
+                                        base64_encode(file_get_contents($ruta))
+                                    : null;
+                        @endphp
+
+                        @if ($imagenBase64)
+                            <img src="{{ $imagenBase64 }}" alt="{{ $imagen->nombre_archivo }}" class="mx-auto"
+                                style="max-height: 120px; object-fit: cover;">
                         @else
-                            <span>No imagen</span>
+                            <span>{{ $imagen->nombre_archivo ?? '--' }}</span>
                         @endif
                     </td>
                     <td class="p-2">{{ $item->modulo->codigo_modulo }}</td>
