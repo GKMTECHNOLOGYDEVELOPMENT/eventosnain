@@ -3,6 +3,8 @@
 @section('title', 'Listado de Cotizaciones')
 
 @section('content')
+
+
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Gestión de Cotizaciones</h5>

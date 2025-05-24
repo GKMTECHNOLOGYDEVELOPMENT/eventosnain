@@ -226,7 +226,9 @@ Route::get('/clientes/search', [CotizacionController::class, 'search'])
     ->name('clientes.search');
 Route::get('/cotizaciones/{cotizacion}/edit', [CotizacionController::class, 'edit'])->name('cotizaciones.edit');
 Route::put('/cotizaciones/update/{cotizacion}', [CotizacionController::class, 'update'])->name('cotizaciones.update');
+Route::get('cotizaciones/detalles/{id}', [CotizacionController::class, 'show'])->name('cotizaciones.show');
 
+Route::put('/cotizaciones/{cotizacion}/estado', [CotizacionController::class, 'actualizarEstado'])->name('cotizaciones.actualizarEstado');
 
 
 // User Interface

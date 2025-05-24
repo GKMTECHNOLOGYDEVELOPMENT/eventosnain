@@ -186,7 +186,9 @@ class CotizacionController extends Controller
                 'subtotal_sin_igv' => $subtotal,
                 'igv' => $igv,
                 'total_con_igv' => $total,
-                'estado' => 'pendiente'
+                'estado' => 'pendiente',
+                'user_id' => auth()->id(), // 👈 Aquí guardas el ID del usuario autenticado
+
             ]);
 
             foreach ($validated['productos'] as $producto) {
@@ -280,6 +282,8 @@ class CotizacionController extends Controller
                 'subtotal_sin_igv' => $subtotal,
                 'igv' => $igv,
                 'total_con_igv' => $total,
+                'user_id' => auth()->id(), // 👈 Aquí guardas el ID del usuario autenticado
+
             ]);
 
             // Eliminar productos anteriores
@@ -309,5 +313,31 @@ class CotizacionController extends Controller
                 'errors' => []
             ], 500);
         }
+    }
+
+
+    public function show($id)
+    {
+        $cotizacion = Cotizacion::with(['cliente', 'detalleProductos.modulo'])->findOrFail($id);
+
+        $clientes = Cliente::all(); // Todos los clientes
+
+        // Obtener todos los módulos activos
+        $modulos = Modulo::where('estado', 1)->get();
+
+        // Retorná una vista para mostrar los detalles de la cotización, solo lectura
+        return view('content.cotizacion.show', compact('cotizacion', 'clientes', 'modulos'));
+    }
+
+    public function actualizarEstado(Request $request, Cotizacion $cotizacion)
+    {
+        $request->validate([
+            'estado' => 'required|string|in:pendiente,aprobada,rechazada,vencida',
+        ]);
+
+        $cotizacion->estado = $request->estado;
+        $cotizacion->save();
+
+        return response()->json(['message' => 'Estado actualizado correctamente']);
     }
 }

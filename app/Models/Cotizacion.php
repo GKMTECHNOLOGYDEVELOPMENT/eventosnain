@@ -22,7 +22,8 @@ class Cotizacion extends Model
         'subtotal_sin_igv',
         'igv',
         'total_con_igv',
-        'estado'
+        'estado',
+        'user_id'
     ];
 
     protected $dates = [
@@ -58,5 +59,10 @@ class Cotizacion extends Model
     public function detalleProductos()
     {
         return $this->hasMany(CotizacionProducto::class, 'cotizacion_id');
+    }
+
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
