@@ -224,6 +224,9 @@ Route::get('/cotizaciones/{id}/imprimir', [CotizacionController::class, 'imprimi
 Route::get('/cotizaciones/Nueva-Cotizacion', [CotizacionController::class, 'create'])->name('cotizacion-newCotizacion')->middleware('auth');
 Route::get('/clientes/search', [CotizacionController::class, 'search'])
     ->name('clientes.search');
+Route::get('/cotizaciones/{cotizacion}/edit', [CotizacionController::class, 'edit'])->name('cotizaciones.edit');
+Route::put('/cotizaciones/update/{cotizacion}', [CotizacionController::class, 'update'])->name('cotizaciones.update');
+
 
 
 // User Interface

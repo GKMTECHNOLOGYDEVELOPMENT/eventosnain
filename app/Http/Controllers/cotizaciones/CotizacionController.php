@@ -41,6 +41,8 @@ class CotizacionController extends Controller
         $query = Cotizacion::with(['cliente', 'productos'])
             ->orderBy('fecha_emision', 'desc');
 
+
+
         // Filtro por rol de usuario
         if ($usuarioAutenticado->rol_id != 1 && $usuarioAutenticado->rol_id != 3) {
             // Para usuarios no admin, solo sus cotizaciones relacionadas a sus clientes
@@ -208,6 +210,102 @@ class CotizacionController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Error al guardar la cotización: ' . $e->getMessage(),
+                'errors' => []
+            ], 500);
+        }
+    }
+
+
+    public function edit($id)
+    {
+        $cotizacion = Cotizacion::with('cliente', 'productos')->findOrFail($id);
+
+        $clientes = Cliente::all(); // Todos los clientes
+
+        // Obtener todos los módulos activos
+        $modulos = Modulo::where('estado', 1)->get();
+        // Si quieres enviar los estados para un select
+        $estados = [
+            'pendiente' => 'Pendiente',
+            'aprobada' => 'Aprobada',
+            'rechazada' => 'Rechazada',
+            'vencida' => 'Vencida'
+        ];
+
+        return view('content.cotizacion.edit', compact('cotizacion', 'estados', 'clientes', 'modulos'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $input = $request->all();
+
+        if (is_string($request->productos)) {
+            $input['productos'] = json_decode($request->productos, true);
+        }
+
+        $validated = $this->validate($request, [
+            'codigo_cotizacion' => 'required|string|max:50|unique:cotizaciones,codigo_cotizacion,' . $id,
+            'fecha_emision' => 'required|date',
+            'cliente_id' => 'required|exists:cliente,id',
+            'validez' => 'required|integer|min:1',
+            'condiciones_comerciales' => 'required|string|max:50',
+            'observaciones' => 'nullable|string',
+            'productos' => 'required|array|min:1',
+            'productos.*.id' => 'required|exists:modulos,id',
+            'productos.*.cantidad' => 'required|integer|min:1',
+            'productos.*.precio' => 'required|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $cotizacion = Cotizacion::findOrFail($id);
+
+            $subtotal = 0;
+            foreach ($validated['productos'] as $producto) {
+                $subtotal += $producto['cantidad'] * $producto['precio'];
+            }
+
+            $igv = $subtotal * 0.18;
+            $total = $subtotal + $igv;
+
+            // Actualizar la cotización
+            $cotizacion->update([
+                'codigo_cotizacion' => $validated['codigo_cotizacion'],
+                'fecha_emision' => $validated['fecha_emision'],
+                'cliente_id' => $validated['cliente_id'],
+                'validez' => $validated['validez'],
+                'condiciones_comerciales' => $validated['condiciones_comerciales'],
+                'observaciones' => $validated['observaciones'] ?? null,
+                'subtotal_sin_igv' => $subtotal,
+                'igv' => $igv,
+                'total_con_igv' => $total,
+            ]);
+
+            // Eliminar productos anteriores
+            CotizacionProducto::where('cotizacion_id', $cotizacion->id)->delete();
+
+            // Insertar nuevos productos
+            foreach ($validated['productos'] as $producto) {
+                CotizacionProducto::create([
+                    'cotizacion_id' => $cotizacion->id,
+                    'modulo_id' => $producto['id'],
+                    'cantidad' => $producto['cantidad'],
+                    'precio_unitario' => $producto['precio'],
+                    'subtotal' => $producto['cantidad'] * $producto['precio']
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Cotización actualizada exitosamente',
+                'id' => $cotizacion->id
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al actualizar la cotización: ' . $e->getMessage(),
                 'errors' => []
             ], 500);
         }
