@@ -212,20 +212,41 @@ class ModuloController extends Controller
         }
     }
 
-    public function destroyImagen($id)
+    public function destroyImagen(Request $request, $id)
     {
-        $imagen = ModuloImagen::findOrFail($id);
+        try {
+            $imagen = ModuloImagen::findOrFail($id);
 
-        // Eliminar el archivo de la imagen
-        if (Storage::exists('public/modulos/' . $imagen->nombre_archivo)) {
-            Storage::delete('public/modulos/' . $imagen->nombre_archivo);
+            // Eliminar el archivo de la imagen
+            if (Storage::exists('public/modulos/' . $imagen->nombre_archivo)) {
+                Storage::delete('public/modulos/' . $imagen->nombre_archivo);
+            }
+
+            // Eliminar el registro de la base de datos
+            $imagen->delete();
+
+            // Verificar si es una petición AJAX
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Imagen eliminada correctamente.',
+                ]);
+            }
+
+            // Fallback en caso de llamada desde formulario tradicional
+            return redirect()->route('modulos.edit', $imagen->modulo_id)
+                ->with('success', 'Imagen eliminada correctamente.');
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ocurrió un error al eliminar la imagen.',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+
+            return back()->with('error', 'No se pudo eliminar la imagen.');
         }
-
-        // Eliminar el registro de la base de datos
-        $imagen->delete();
-
-        return redirect()->route('modulos.edit', $imagen->modulo_id)
-            ->with('success', 'Imagen eliminada correctamente.');
     }
 
 

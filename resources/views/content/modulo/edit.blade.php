@@ -25,6 +25,7 @@
 @endif
 
 <h4 class="py-3 mb-4"><span class="text-muted fw-light">Formulario /</span> Editar Módulo</h4>
+<input type="hidden" name="_token" value="{{ csrf_token() }}">
 
 <div class="row">
     <div class="col-xxl">
@@ -33,6 +34,7 @@
                 <h5 class="mb-0">Editar Módulo: {{ $modulo->codigo_modulo }}</h5>
             </div>
             <div class="card-body">
+                <!-- Formulario principal para editar datos del módulo (sin imagenes) -->
                 <form id="moduloEditForm" method="POST" action="{{ route('modulos.update', $modulo->id) }}">
                     @csrf
                     @method('PUT')
@@ -164,51 +166,6 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <input type="file" class="form-control" id="imagenes" name="imagenes[]" multiple>
-                        <button type="button" class="btn btn-secondary mt-2" id="subirImagenesBtn">
-                            <i class="fas fa-upload"></i> Subir Imágenes
-                        </button>
-
-                    </div>
-
-
-                    @if($modulo->imagenes->count())
-                    <div class="mb-4">
-                        <label class="form-label"><i class="fas fa-images me-2"></i>Imágenes del módulo</label>
-                        <div class="row g-3">
-                            @foreach($modulo->imagenes as $imagen)
-                            <div class="col-md-3 text-center">
-                                <div class="card">
-                                    <img src="{{ asset('storage/modulos/' . $imagen->nombre_archivo) }}"
-                                        class="card-img-top img-thumbnail" alt="Imagen del módulo"
-                                        style="max-height: 180px; object-fit: cover;">
-                                    <div class="card-body p-2">
-                                        @if($imagen->es_principal)
-                                        <span class="badge bg-success">
-                                            <i class="fas fa-star me-1"></i> Principal
-                                        </span>
-                                        @else
-                                        <span class="badge bg-secondary">Secundaria</span>
-                                        @endif
-                                        <form action="{{ route('imagenes.destroy', $imagen->id) }}" method="POST"
-                                            class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm mt-2">
-                                                <i class="fas fa-trash-alt"></i> Eliminar
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-
-                        </div>
-                    </div>
-                    @endif
-
-
                     <div class="d-flex justify-content-between">
                         <a href="{{ route('modulo-list') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i> Cancelar
@@ -218,10 +175,53 @@
                         </button>
                     </div>
                 </form>
+
+                <!-- Sección fuera del form para subir imágenes -->
+                <div class="mb-3 mt-4">
+                    <label class="form-label"><i class="fas fa-upload me-2"></i>Subir Imágenes</label>
+                    <input type="file" class="form-control" id="imagenes" name="imagenes[]" multiple>
+                    <button type="button" class="btn btn-secondary mt-2" id="subirImagenesBtn">
+                        <i class="fas fa-upload"></i> Subir Imágenes
+                    </button>
+                </div>
+
+                <!-- Sección para mostrar imágenes y eliminar (fuera del form principal) -->
+                @if($modulo->imagenes->count())
+                <div class="mb-4">
+                    <label class="form-label"><i class="fas fa-images me-2"></i>Imágenes del módulo</label>
+                    <div class="row g-3">
+                        @foreach($modulo->imagenes as $imagen)
+                        <div class="col-md-3 text-center imagen-card" data-id="{{ $imagen->id }}">
+                            <div class="card">
+                                <img src="{{ asset('storage/modulos/' . $imagen->nombre_archivo) }}"
+                                    class="card-img-top img-thumbnail" alt="Imagen del módulo"
+                                    style="max-height: 180px; object-fit: cover;">
+                                <div class="card-body p-2">
+                                    @if($imagen->es_principal)
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-star me-1"></i> Principal
+                                    </span>
+                                    @else
+                                    <span class="badge bg-secondary">Secundaria</span>
+                                    @endif
+
+                                    <button type="button" class="btn btn-danger btn-sm mt-2 btn-eliminar-imagen"
+                                        data-id="{{ $imagen->id }}">
+                                        <i class="fas fa-trash-alt"></i> Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
             </div>
         </div>
     </div>
 </div>
+
 
 <script>
     // Función para formatear moneda
@@ -305,7 +305,9 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': form._token.value // <-- aquí agregas el token
+
                 },
                 body: JSON.stringify(data)
             })
@@ -384,4 +386,65 @@
             });
     });
 </script>
+
+<script>
+    document.querySelectorAll('.btn-eliminar-imagen').forEach(button => {
+        button.addEventListener('click', function() {
+            const imagenId = this.dataset.id;
+
+            Swal.fire({
+                title: '¿Eliminar imagen?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/modulo/eliminar/imagenes/${imagenId}`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')
+                                    .value,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                _method: 'DELETE'
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Eliminado',
+                                    text: data.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+
+                                // Eliminar del DOM
+                                document.querySelector(`.imagen-card[data-id="${imagenId}"]`)
+                                    .remove();
+                            } else {
+                                throw new Error(data.message || 'Error al eliminar');
+                            }
+                        })
+                        .catch(err => {
+                            Swal.fire('Error', err.message, 'error');
+                        });
+                }
+            });
+        });
+    });
+</script>
+
+
+
+
+
 @endsection
