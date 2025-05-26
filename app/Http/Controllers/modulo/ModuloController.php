@@ -46,7 +46,66 @@ class ModuloController extends Controller
         return view('content.modulo.index', compact('modulos'));
     }
 
-
+    public function getModulos(Request $request)
+    {
+        $columns = [
+            'id',
+            'codigo_modulo',
+            'marca',
+            'modelo',
+            'descripcion',
+            'precio_compra',
+            'precio_venta',
+            'stock_total',
+            'fecha_registro',
+            'estado'
+        ];
+    
+        $totalData = Modulo::count();
+        $query = Modulo::query();
+    
+        if (!empty($request->search['value'])) {
+            $search = $request->search['value'];
+            $query->where(function ($q) use ($search) {
+                $q->where('codigo_modulo', 'like', "%{$search}%")
+                    ->orWhere('marca', 'like', "%{$search}%")
+                    ->orWhere('modelo', 'like', "%{$search}%")
+                    ->orWhere('descripcion', 'like', "%{$search}%");
+            });
+        }
+    
+        $totalFiltered = $query->count();
+    
+        $modulos = $query->offset($request->start)
+            ->limit($request->length)
+            ->orderBy($columns[$request->order[0]['column']] ?? 'id', $request->order[0]['dir'] ?? 'desc')
+            ->get();
+    
+        $data = [];
+        foreach ($modulos as $index => $modulo) {
+            $data[] = [
+                'DT_RowIndex'     => $request->start + $index + 1,
+                'codigo_modulo'   => $modulo->codigo_modulo,
+                'marca'           => $modulo->marca,
+                'modelo'          => $modulo->modelo,
+                'descripcion'     => $modulo->descripcion,
+                'precio_compra'   => '$' . number_format($modulo->precio_compra, 2),
+                'precio_venta'    => '$' . number_format($modulo->precio_venta, 2),
+                'stock_total'     => $modulo->stock_total,
+                'fecha_registro'  => $modulo->fecha_registro,
+                'estado'          => $modulo->estado ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-danger">Inactivo</span>',
+                'acciones'        => view('content.modulo.partials._acciones', compact('modulo'))->render(),
+            ];
+        }
+    
+        return response()->json([
+            'draw'            => intval($request->draw),
+            'recordsTotal'    => $totalData,
+            'recordsFiltered' => $totalFiltered,
+            'data'            => $data,
+        ]);
+    }
+    
     public function create()
     {
 
