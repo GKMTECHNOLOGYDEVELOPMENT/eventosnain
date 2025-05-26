@@ -38,12 +38,7 @@
       "icon": "menu-icon tf-icons bx bx-calendar",
       "slug": "app-calendar"
     },
-    {
-      "url": "/client/clientReunion",
-      "name": "Aprobados",
-      "icon": "menu-icon tf-icons bx bx-grid",
-      "slug": "app-kanban"
-    },
+   
     {
       "url": "/cotizaciones/",
       "name": "Cotizaciones",

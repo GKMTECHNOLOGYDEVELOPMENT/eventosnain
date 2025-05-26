@@ -872,121 +872,53 @@ class Client extends Controller
 
 
 
-    public function store(Request $request)
-    {
-        // Validar los datos recibidos
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'empresa' => 'nullable|string|max:255',
-            'telefono' => 'nullable|string|max:20',
-            'email' => 'nullable|email',
-            'tipo_cliente' => 'nullable|string|max:255',
-            'servicios' => 'nullable|string|max:255',
-            'mensaje' => 'nullable|string',
-            'status' => 'nullable|string',
-            'correo' => 'nullable|string',
-            'whatsapp' => 'nullable|string',
-            'reunion' => 'nullable|string',
-            'contrato' => 'nullable|string',
-            'events_id' => 'nullable|exists:salida,id',
+   public function store(Request $request)
+{
+    // Validar los datos recibidos
+    $request->validate([
+        'nombre' => 'required|string|max:255',
+        'empresa' => 'nullable|string|max:255',
+        'telefono' => 'nullable|string|max:20',
+        'email' => 'nullable|email',
+        'servicios' => 'nullable|string|max:255',
+        'mensaje' => 'nullable|string',
+        'documento' => 'nullable|string|max:20', // Validación para el número de documento
+        'events_id' => 'nullable|exists:salida,id',
+    ]);
+
+    try {
+        // Obtener el ID del usuario autenticado
+        $userId = auth()->id();
+
+        // Crear un nuevo cliente
+        $cliente = Cliente::create([
+            'nombre' => $request->input('nombre'),
+            'empresa' => $request->input('empresa'),
+            'telefono' => $request->input('telefono'),
+            'email' => $request->input('email'),
+            'servicios' => $request->input('servicios'),
+            'mensaje' => $request->input('mensaje', ' '),
+            'documento' => $request->input('documento'), // Número de documento
+            'status' => 'PENDIENTE',
+            'correo' => 'PENDIENTE',
+            'whatsapp' => 'PENDIENTE',
+            'reunion' => 'PENDIENTE',
+            'contrato' => 'PENDIENTE',
+            'fecharegistro' => now()->toDateString(),
+            'user_id' => $userId,
+            'tecnico' => 'NO ASIGNADO',
+            'events_id' => $request->input('events_id'),
+            'llamada' => 'PENDIENTE',
+            'levantamiento' => 'PENDIENTE',
+            'cotizacion' => 'PENDIENTE',
         ]);
 
-        // Verificar si el correo, nombre, empresa o teléfono ya existen
-        $exists = Cliente::where(function ($query) use ($request) {
-            $query->where('email', $request->input('email'))
-                ->orWhere('nombre', $request->input('nombre'))
-                ->orWhere('empresa', $request->input('empresa'))
-                ->orWhere('telefono', $request->input('telefono'));
-        })->exists();
-
-        if ($exists) {
-            return back()->withErrors([
-                'email' => 'El correo, nombre, empresa o teléfono ya están registrados.',
-            ])->withInput();
-        }
-
-        // Obtener el ID y nombre del usuario autenticado
-        $user = auth()->user();
-        $userId = auth()->id();
-        $userName = auth()->user()->name;
-        $userEmail = $user->email;
-
-        try {
-            // Crear un nuevo cliente
-            $cliente = Cliente::create([
-                'nombre' => $request->input('nombre'),
-                'empresa' => $request->input('empresa'),
-                'telefono' => $request->input('telefono'),
-                'email' => $request->input('email'),
-                'tipo_cliente' => $request->input('tipo_cliente'),
-                'servicios' => $request->input('servicios'),
-                'mensaje' => $request->input('mensaje', ' '),
-                'status' => 'PENDIENTE',
-                'correo' => 'PENDIENTE',
-                'whatsapp' => 'PENDIENTE',
-                'reunion' => 'PENDIENTE',
-                'contrato' => 'PENDIENTE',
-                'fecharegistro' => now()->toDateString(),
-                'user_id' => $userId,
-                'tecnico' => 'NO ASIGNADO',
-                'events_id' => $request->input('events_id'),
-                'llamada' => 'PENDIENTE',
-                'levantamiento' => 'PENDIENTE',
-                'cotizacion' => 'PENDIENTE',
-            ]);
-
-            // Crear una nueva observación asociada al cliente
-            Observacion::create([
-                'observacionreunion' => 'No existe Ninguna Observacion',
-                'fechareunion' => now()->toDateString(),
-                'observacioncontrato' => 'No existe Ninguna Observacion',
-                'fechacontrato' => now()->toDateString(),
-                'id_cliente' => $cliente->id,
-            ]);
-
-            // Determinar el Mailable adecuado según el servicio
-            $servicio = $request->input('servicios');
-
-            switch ($servicio) {
-                case 'CCTV':
-                    $mail = new ClienteRegistrado($cliente, $userName, $userEmail);
-                    break;
-                case 'MODULO':
-                    $mail = new ClienteRegistradoseM($cliente, $userName, $userEmail);
-                    break;
-                case 'SOFTWARE':
-                    $mail = new ClienteRegistradoses($cliente, $userName, $userEmail);
-                    break;
-                case 'SERVICE DESK':
-                    $mail = new ClienteRegistradoser($cliente, $userName, $userEmail);
-                    break;
-                case 'OTROS':
-                    $mail = new ClienteRegistradoseG($cliente, $userName, $userEmail);
-                    break;
-                default:
-                    throw new \Exception('Tipo de servicio no reconocido.');
-            }
-
-            // Enviar el correo
-            Mail::to($cliente->email)->send($mail);
-
-            // Actualizar el campo 'correo' a 'SI' si se envía correctamente y cambiar el status
-            $cliente->update(['correo' => 'SI', 'status' => 'En Proceso']);
-
-            // Redirigir con mensaje de éxito
-            return redirect()->route('client-newClient')->with('success', 'Cliente guardado con éxito y correo enviado.');
-        } catch (\Exception $e) {
-            // Registrar el error en el log
-            Log::error('Error al guardar el cliente o enviar el correo: ' . $e->getMessage());
-
-            // Actualizar el campo 'correo' a 'NO' y dejar el status como 'PENDIENTE'
-            $cliente->update(['correo' => 'NO']);
-
-            // Redirigir con mensaje de error
-            return redirect()->route('client-newClient')->with('error', 'Cliente guardado, pero ocurrió un error al enviar el correo.');
-        }
+        return redirect()->route('client-newClient')->with('success', 'Cliente guardado con éxito.');
+    } catch (\Exception $e) {
+        Log::error('Error al guardar el cliente: ' . $e->getMessage());
+        return redirect()->route('client-newClient')->with('error', 'Error al guardar el cliente.');
     }
-
+}
 
 
 

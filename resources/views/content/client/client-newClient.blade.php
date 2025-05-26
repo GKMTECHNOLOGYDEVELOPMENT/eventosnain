@@ -66,6 +66,18 @@
                             @enderror
                         </div>
                     </div>
+                    <!-- Número de Documento -->
+                    <div class="row mb-3">
+                        <label for="documento" class="col-sm-2 col-form-label">N° Documento</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="documento" id="documento"
+                                class="form-control @error('documento') is-invalid @enderror"
+                                placeholder="Ingrese DNI, RUC, etc." value="{{ old('documento') }}">
+                            @error('documento')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
 
                     <!-- Tel��fono -->
                     <div class="row mb-3">
@@ -92,25 +104,6 @@
                         </div>
                     </div>
 
-                    <!-- Tipo Cliente -->
-                    <div class="row mb-3">
-                        <label for="tipo_cliente" class="col-sm-2 col-form-label">Tipo Cliente</label>
-                        <div class="col-sm-10">
-                            <select name="tipo_cliente" id="tipo_cliente" required
-                                class="form-select @error('tipo_cliente') is-invalid @enderror">
-                                <option value="" disabled selected>Seleccione</option>
-                                <option value="Intermedio" {{ old('tipo_cliente') == 'Intermedio' ? 'selected' : '' }}>
-                                    Intermedio</option>
-                                <option value="Potencial" {{ old('tipo_cliente') == 'Potencial' ? 'selected' : '' }}>
-                                    Potencial</option>
-                                <option value="Indeciso" {{ old('tipo_cliente') == 'Indeciso' ? 'selected' : '' }}>
-                                    Indeciso</option>
-                            </select>
-                            @error('tipo_cliente')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
 
 
                     <!-- Servicios -->
@@ -120,14 +113,8 @@
                             <select name="servicios" id="servicios" required
                                 class="form-select @error('servicios') is-invalid @enderror">
                                 <option value="" disabled selected>Seleccione</option>
-                                <option value="CCTV" {{ old('servicios') == 'CCTV' ? 'selected' : '' }}>CCTV</option>
                                 <option value="MODULO" {{ old('servicios') == 'MODULO' ? 'selected' : '' }}>MODULO
                                 </option>
-                                <option value="SOFTWARE" {{ old('servicios') == 'SOFTWARE' ? 'selected' : '' }}>SOFTWARE
-                                </option>
-                                <option value="SERVICE DESK" {{ old('servicios') == 'SERVICE DESK' ? 'selected' : '' }}>
-                                    SERVICE DESK</option>
-                                <option value="OTROS" {{ old('servicios') == 'OTROS' ? 'selected' : '' }}>OTROS</option>
                             </select>
                             @error('servicios')
                             <div class="invalid-feedback">{{ $message }}</div>
