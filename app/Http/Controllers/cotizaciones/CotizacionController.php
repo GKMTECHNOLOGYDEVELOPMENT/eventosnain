@@ -253,6 +253,7 @@ class CotizacionController extends Controller
         // Obtener todos los módulos activos
         $modulos = Modulo::where('estado', 1)->get();
         // Si quieres enviar los estados para un select
+          $condicionesComerciales = DB::table('condiciones_comerciales')->get(); // O usa el modelo si lo tienes
         $estados = [
             'pendiente' => 'Pendiente',
             'aprobada' => 'Aprobada',
@@ -260,7 +261,7 @@ class CotizacionController extends Controller
             'vencida' => 'Vencida'
         ];
 
-        return view('content.cotizacion.edit', compact('cotizacion', 'estados', 'clientes', 'modulos'));
+        return view('content.cotizacion.edit', compact('cotizacion', 'estados', 'clientes', 'modulos','condicionesComerciales'));
     }
 
     public function update(Request $request, $id)
