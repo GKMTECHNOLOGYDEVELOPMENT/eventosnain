@@ -161,12 +161,11 @@
                 Condiciones Comerciales
             </div>
             <div class="px-4 py-3 rounded-b-md leading-relaxed">
-                <p><strong>ENTREGA:</strong> INCLUYE ENTREGA.</p>
-                <p><strong>PAGO:</strong> CONTADO.</p>
-                <p><strong>TIPO DE CAMBIO:</strong> EL TIPO DE CAMBIO ES REFERENCIAL. EL DÍA QUE SE GENERE LA COMPRA SE
-                    CONSIDERARÁ EL VIGENTE.</p>
-                <p>ACCESORIOS DE INSTALACIÓN INCLUIDOS.</p>
+                @foreach ($condiciones as $condicion)
+                    <p><strong>{{ strtoupper($condicion->nombre) }}:</strong> {{ strtoupper($condicion->descripcion) }}</p>
+                @endforeach
             </div>
+            
         </div>
         <div class="flex flex-col md:flex-row gap-4 text-xs">
             <!-- BCP -->

@@ -98,7 +98,7 @@ class CotizacionController extends Controller
 
         // Obtener todos los módulos activos
         $modulos = Modulo::where('estado', 1)->get();
-    $condicionesComerciales = CondicionComercial::all(); // Asegúrate de tener el modelo correcto
+        $condicionesComerciales = CondicionComercial::all(); // Asegúrate de tener el modelo correcto
 
         return view('content.cotizacion.new-cotizacion', compact('clientes', 'modulos', 'condicionesComerciales'));
     }
@@ -285,7 +285,7 @@ class CotizacionController extends Controller
             'encargado'
         ])->findOrFail($id);
 
-        // ✅ Agrega aquí este foreach
+        // Convertir imágenes de productos a base64 redimensionadas
         foreach ($cotizacion->productos as $producto) {
             $imagenes = \App\Models\ModuloImagen::where('modulo_id', $producto->modulo->id)
                 ->take(2)
@@ -300,6 +300,7 @@ class CotizacionController extends Controller
 
         $cotizacion->fecha_emision = \Carbon\Carbon::parse($cotizacion->fecha_emision);
 
+        // Logos y fondo
         $logoFondo = 'data:image/jpg;base64,' . base64_encode(
             file_get_contents(public_path('assets/img/backgrounds/hoja_membretada.jpg'))
         );
@@ -307,25 +308,32 @@ class CotizacionController extends Controller
         $logoBCP = $this->convertirLogoAWebpBase64(public_path('assets/img/backgrounds/bcp-logo.png'));
         $logoBBVA = $this->convertirLogoAWebpBase64(public_path('assets/img/backgrounds/bbva-logo.png'));
         $logoInterbank = $this->convertirLogoAWebpBase64(public_path('assets/img/backgrounds/interbank-logo.png'));
-        
+
+        // Cargar condiciones comerciales
+        $condiciones = \App\Models\CondicionesComerciales::all();
+
+        // Renderizar HTML
         $html = view('content.cotizacion.pdf.index', compact(
             'cotizacion',
             'logoFondo',
             'logoBCP',
             'logoBBVA',
-            'logoInterbank'
+            'logoInterbank',
+            'condiciones'
         ))->render();
 
+        // Generar PDF
         $pdf = \Spatie\Browsershot\Browsershot::html($html)
             ->format('A4')
             ->showBackground()
-            ->timeout(60) // por si aún demora un poco
+            ->timeout(60)
             ->pdf();
 
         return response($pdf)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'inline; filename="cotizacion-' . $cotizacion->codigo_cotizacion . '.pdf"');
     }
+
 
 
 
