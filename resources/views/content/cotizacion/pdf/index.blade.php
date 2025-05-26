@@ -161,11 +161,12 @@
                 Condiciones Comerciales
             </div>
             <div class="px-4 py-3 rounded-b-md leading-relaxed">
-                @foreach ($condiciones as $condicion)
-                    <p><strong>{{ strtoupper($condicion->nombre) }}:</strong> {{ strtoupper($condicion->descripcion) }}</p>
-                @endforeach
+                @if (!empty($cotizacion->observaciones))
+                    <p class="whitespace-pre-line uppercase">{{ $cotizacion->observaciones }}</p>
+                @else
+                    <div style="height: 80px;"></div> {{-- Espacio vacío si no hay texto --}}
+                @endif
             </div>
-            
         </div>
         <div class="flex flex-col md:flex-row gap-4 text-xs">
             <!-- BCP -->
