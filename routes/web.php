@@ -18,6 +18,7 @@ use App\Http\Controllers\authentications\RegisterBasic;
 use App\Http\Controllers\authentications\ForgotPasswordBasic;
 use App\Http\Controllers\Calendario\Calendario;
 use App\Http\Controllers\cards\CardBasic;
+use App\Http\Controllers\condiciones\CondicionesController;
 use App\Http\Controllers\cotizaciones\CotizacionController;
 use App\Http\Controllers\dashboard\Usuario;
 use App\Http\Controllers\user_interface\Accordion;
@@ -202,7 +203,6 @@ Route::get('/cards/basic', [CardBasic::class, 'index'])->name('cards-basic');
 
 
 //Cotizaciones
-Route::get('/cotizaciones/Nueva-Cotizacion', [CotizacionController::class, 'create'])->name('cotizacion-newCotizacion')->middleware('auth');
 Route::get('/clientes/search', [CotizacionController::class, 'search'])
     ->name('clientes.search');
 //Modulo
@@ -216,8 +216,8 @@ Route::delete('/modulos/{modulo}', [ModuloController::class, 'destroy'])
 
 Route::delete('modulo/eliminar/imagenes/{id}', [ModuloController::class, 'destroyImagen'])->name('imagenes.destroy');
 Route::post('/modulos/{modulo}/upload-imagenes', [ModuloController::class, 'uploadImagenes'])->name('modulos.uploadImagenes');
-
-
+//COTIZACIONES
+Route::get('/cotizaciones/Nueva-Cotizacion', [CotizacionController::class, 'create'])->name('cotizacion-newCotizacion')->middleware('auth');
 Route::get('/cotizaciones', [CotizacionController::class, 'index'])->name('cotizaciones.index');
 Route::post('/cotizaciones/store', [CotizacionController::class, 'store'])->name('cotizaciones.store');
 Route::get('/cotizaciones/{id}/imprimir', [CotizacionController::class, 'imprimir'])->name('cotizaciones.imprimir');
@@ -228,10 +228,14 @@ Route::get('/cotizaciones/{id}/pdf', [CotizacionController::class, 'exportarPdf'
 Route::get('/cotizaciones/{cotizacion}/edit', [CotizacionController::class, 'edit'])->name('cotizaciones.edit');
 Route::put('/cotizaciones/update/{cotizacion}', [CotizacionController::class, 'update'])->name('cotizaciones.update');
 Route::get('cotizaciones/detalles/{id}', [CotizacionController::class, 'show'])->name('cotizaciones.show');
-
 Route::put('/cotizaciones/{cotizacion}/estado', [CotizacionController::class, 'actualizarEstado'])->name('cotizaciones.actualizarEstado');
-
-
+//CONDICIONES
+Route::get('/condiciones/Nueva-Condicion', [CondicionesController::class, 'create'])->name('condiciones-newCondiciones')->middleware('auth');
+Route::post('/condiciones-comerciales/guardar', [CondicionesController::class, 'guardar'])->name('condiciones.guardar');
+Route::get('/condiciones', [CondicionesController::class, 'index'])->name('condiciones.index');
+Route::get('/condiciones/{id}/edit', [CondicionesController::class, 'edit'])->name('condiciones.edit');
+Route::put('/condiciones/{id}', [CondicionesController::class, 'update'])->name('condiciones.update');
+Route::delete('/condiciones/{id}', [CondicionesController::class, 'destroy'])->name('condiciones.destroy');
 // User Interface
 Route::get('/ui/accordion', [Accordion::class, 'index'])->name('ui-accordion');
 Route::get('/ui/alerts', [Alerts::class, 'index'])->name('ui-alerts');

@@ -55,6 +55,12 @@
       "name": "Modulo",
       "icon": "menu-icon tf-icons bx bx-grid",
       "slug": "app-kanban"
+    },
+    {
+      "url": "/condiciones",
+      "name": "Condiciones",
+      "icon": "menu-icon tf-icons bx bx-grid",
+      "slug": "app-kanban"
     }
   ]
 }
