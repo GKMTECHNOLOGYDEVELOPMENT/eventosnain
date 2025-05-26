@@ -13,6 +13,7 @@ use App\Mail\FormSubmissionMail;
 use App\Models\Atencion;
 use Illuminate\Http\Request;
 use App\Models\Cliente;
+use App\Models\CondicionComercial;
 use App\Models\Cotizacion;
 use App\Models\CotizacionProducto;
 use App\Models\Event;
@@ -97,8 +98,9 @@ class CotizacionController extends Controller
 
         // Obtener todos los módulos activos
         $modulos = Modulo::where('estado', 1)->get();
+    $condicionesComerciales = CondicionComercial::all(); // Asegúrate de tener el modelo correcto
 
-        return view('content.cotizacion.new-cotizacion', compact('clientes', 'modulos'));
+        return view('content.cotizacion.new-cotizacion', compact('clientes', 'modulos', 'condicionesComerciales'));
     }
 
     public function search(Request $request)

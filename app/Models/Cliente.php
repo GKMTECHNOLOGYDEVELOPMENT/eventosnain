@@ -27,16 +27,17 @@ class Cliente extends Model
         'events_id',
         'llamada',
         'levantamiento',
+        'documento'
 
 
 
     ];
 
 
-    protected $table = 'cliente'; // Especifica la tabla si no sigue la convenci¨®n de nombres
+    protected $table = 'cliente'; // Especifica la tabla si no sigue la convenciï¿½ï¿½n de nombres
     protected $primaryKey = 'id'; // Clave primaria
 
-    public $timestamps = false; // Desactiva el manejo autom¨¢tico de timestamps
+    public $timestamps = false; // Desactiva el manejo automï¿½ï¿½tico de timestamps
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
