@@ -49,6 +49,7 @@ use App\Http\Controllers\form_layouts\VerticalForm;
 use App\Http\Controllers\form_layouts\HorizontalForm;
 use App\Http\Controllers\modulo\ModuloController;
 use App\Http\Controllers\tables\Basic as TablesBasic;
+use App\Models\CondicionComercial;
 
 // Main Page Route
 
@@ -236,6 +237,10 @@ Route::get('/condiciones', [CondicionesController::class, 'index'])->name('condi
 Route::get('/condiciones/{id}/edit', [CondicionesController::class, 'edit'])->name('condiciones.edit');
 Route::put('/condiciones/{id}', [CondicionesController::class, 'update'])->name('condiciones.update');
 Route::delete('/condiciones/{id}', [CondicionesController::class, 'destroy'])->name('condiciones.destroy');
+Route::get('/condiciones-comerciales/{id}/descripcion', function ($id) {
+    $condicion = CondicionComercial::findOrFail($id);
+    return response()->json(['descripcion' => $condicion->descripcion]);
+});
 // User Interface
 Route::get('/ui/accordion', [Accordion::class, 'index'])->name('ui-accordion');
 Route::get('/ui/alerts', [Alerts::class, 'index'])->name('ui-alerts');
