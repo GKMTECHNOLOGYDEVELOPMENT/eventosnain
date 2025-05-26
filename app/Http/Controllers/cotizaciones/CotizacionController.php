@@ -219,31 +219,116 @@ class CotizacionController extends Controller
             ], 500);
         }
     }
+    private function convertirAWebpBase64(string $ruta): string
+    {
+        $image = @imagecreatefromstring(file_get_contents($ruta));
+
+        if (!$image) {
+            throw new \Exception("No se pudo abrir la imagen: $ruta");
+        }
+
+        $destWidth = 300;
+        $destHeight = 160;
+
+        // Crear imagen redimensionada (300x160)
+        $resized = imagecreatetruecolor($destWidth, $destHeight);
+        imagesavealpha($resized, true);
+        $transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
+        imagefill($resized, 0, 0, $transparent);
+
+        // Redimensionar
+        imagecopyresampled(
+            $resized,
+            $image,
+            0,
+            0,
+            0,
+            0,
+            $destWidth,
+            $destHeight,
+            imagesx($image),
+            imagesy($image)
+        );
+
+        imagedestroy($image);
+
+        ob_start();
+        imagewebp($resized, null, 75);
+        $contenido = ob_get_clean();
+        imagedestroy($resized);
+
+        return 'data:image/webp;base64,' . base64_encode($contenido);
+    }
+
+    private function convertirLogoAWebpBase64(string $ruta): string
+    {
+        $image = @imagecreatefromstring(file_get_contents($ruta));
+
+        if (!$image) {
+            throw new \Exception("No se pudo abrir la imagen: $ruta");
+        }
+
+        ob_start();
+        imagewebp($image, null, 75);
+        $contenido = ob_get_clean();
+        imagedestroy($image);
+
+        return 'data:image/webp;base64,' . base64_encode($contenido);
+    }
+
+
     public function exportarPdf($id)
     {
         $cotizacion = Cotizacion::with([
             'cliente',
-            'productos.modulo.imagenPrincipal'
+            'productos.modulo.imagenPrincipal',
+            'encargado'
         ])->findOrFail($id);
-    
+
+        // ✅ Agrega aquí este foreach
+        foreach ($cotizacion->productos as $producto) {
+            $imagenes = \App\Models\ModuloImagen::where('modulo_id', $producto->modulo->id)
+                ->take(2)
+                ->get()
+                ->filter(fn($img) => file_exists(public_path('storage/modulos/' . $img->nombre_archivo)));
+
+            $producto->imagenes_base64 = $imagenes->map(function ($img) {
+                $ruta = public_path('storage/modulos/' . $img->nombre_archivo);
+                return $this->convertirAWebpBase64($ruta);
+            });
+        }
+
         $cotizacion->fecha_emision = \Carbon\Carbon::parse($cotizacion->fecha_emision);
-    
+
         $logoFondo = 'data:image/jpg;base64,' . base64_encode(
             file_get_contents(public_path('assets/img/backgrounds/hoja_membretada.jpg'))
         );
-    
-        $html = view('content.cotizacion.pdf.index', compact('cotizacion', 'logoFondo'))->render();
-    
+
+        $logoBCP = $this->convertirLogoAWebpBase64(public_path('assets/img/backgrounds/bcp-logo.png'));
+        $logoBBVA = $this->convertirLogoAWebpBase64(public_path('assets/img/backgrounds/bbva-logo.png'));
+        $logoInterbank = $this->convertirLogoAWebpBase64(public_path('assets/img/backgrounds/interbank-logo.png'));
+        
+        $html = view('content.cotizacion.pdf.index', compact(
+            'cotizacion',
+            'logoFondo',
+            'logoBCP',
+            'logoBBVA',
+            'logoInterbank'
+        ))->render();
+
         $pdf = \Spatie\Browsershot\Browsershot::html($html)
             ->format('A4')
             ->showBackground()
+            ->timeout(60) // por si aún demora un poco
             ->pdf();
-    
+
         return response($pdf)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'inline; filename="cotizacion-' . $cotizacion->codigo_cotizacion . '.pdf"');
     }
-    
+
+
+
     public function edit($id)
     {
         $cotizacion = Cotizacion::with('cliente', 'productos')->findOrFail($id);

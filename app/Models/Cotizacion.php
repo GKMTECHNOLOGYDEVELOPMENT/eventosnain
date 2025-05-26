@@ -65,4 +65,8 @@ class Cotizacion extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+    public function encargado()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
