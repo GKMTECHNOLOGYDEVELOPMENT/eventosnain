@@ -125,28 +125,17 @@
                             </label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-file-contract"></i></span>
-                                <select class="form-control" id="condiciones_comerciales" name="condiciones_comerciales"
-                                    required>
+                                <select class="form-control" id="condiciones_comerciales" name="condiciones_comerciales" required onchange="actualizarObservaciones()">
                                     <option value="">Seleccione una opción</option>
-                                    <option value="contado"
-                                        {{ $cotizacion->condiciones_comerciales == 'contado' ? 'selected' : '' }}>
-                                        Contado</option>
-                                    <option value="credito_15"
-                                        {{ $cotizacion->condiciones_comerciales == 'credito_15' ? 'selected' : '' }}>
-                                        Crédito a 15 días</option>
-                                    <option value="credito_30"
-                                        {{ $cotizacion->condiciones_comerciales == 'credito_30' ? 'selected' : '' }}>
-                                        Crédito a 30 días</option>
-                                    <option value="credito_60"
-                                        {{ $cotizacion->condiciones_comerciales == 'credito_60' ? 'selected' : '' }}>
-                                        Crédito a 60 días</option>
-                                    <option value="otro"
-                                        {{ $cotizacion->condiciones_comerciales == 'otro' ? 'selected' : '' }}>Otra
-                                        (especificar en observaciones)</option>
+                                    @foreach($condicionesComerciales as $condicion)
+                                    <option value="{{ $condicion->id }}"
+                                        {{ $cotizacion->condiciones_comerciales == $condicion->id ? 'selected' : '' }}>
+                                        {{ $condicion->nombre }}
+                                    </option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
-
                     </div>
 
 
@@ -694,6 +683,59 @@ $modulosOptions .= '<option value="'.$modulo->id.'" data-precio="'.$modulo->prec
             }
         });
     });
+</script>
+
+<script>
+// Variable para controlar si las observaciones han sido modificadas manualmente
+let observacionesModificadas = false;
+
+// Función para actualizar observaciones
+function actualizarObservaciones() {
+    const condicionId = document.getElementById('condiciones_comerciales').value;
+    const textareaObservaciones = document.getElementById('observaciones');
+    
+    if (!condicionId) {
+        if (!observacionesModificadas) {
+            textareaObservaciones.value = '';
+        }
+        return;
+    }
+    
+    fetch(`/condiciones-comerciales/${condicionId}/descripcion`)
+        .then(response => response.json())
+        .then(data => {
+            // Solo actualizar si no han sido modificadas manualmente
+            if (!observacionesModificadas) {
+                textareaObservaciones.value = data.descripcion || '';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// Cargar al iniciar
+document.addEventListener('DOMContentLoaded', function() {
+    const textareaObservaciones = document.getElementById('observaciones');
+    const condicionId = document.getElementById('condiciones_comerciales').value;
+    
+    // Verificar si hay observaciones personalizadas
+    const tieneObservacionesPersonales = textareaObservaciones.value.trim() !== '';
+    
+    // Si no hay observaciones personales, cargar la descripción
+    if (condicionId && !tieneObservacionesPersonales) {
+        fetch(`/condiciones-comerciales/${condicionId}/descripcion`)
+            .then(response => response.json())
+            .then(data => {
+                textareaObservaciones.value = data.descripcion || '';
+            });
+    }
+    
+    // Detectar cambios manuales en las observaciones
+    textareaObservaciones.addEventListener('input', function() {
+        observacionesModificadas = true;
+    });
+});
 </script>
 
 @endpush

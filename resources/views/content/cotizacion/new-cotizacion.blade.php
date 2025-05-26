@@ -7,7 +7,8 @@
 
 <!-- Librerías -->
 <script src="{{ asset('assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -92,15 +93,15 @@
                             </label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-users"></i></span>
-                                <select class="form-control" id="cliente_id" name="cliente_id" required>
+                                <select class="form-control select2-clientes" id="cliente_id" name="cliente_id" required>
                                     <option value="">Seleccione un cliente</option>
                                     @foreach ($clientes as $cliente)
-                                    <option value="{{ $cliente->id }}">
+                                    <option value="{{ $cliente->id }}"
+                                        {{ old('cliente_id', isset($cotizacion) ? $cotizacion->cliente_id : '') == $cliente->id ? 'selected' : '' }}>
                                         {{ $cliente->nombre }} - {{ $cliente->empresa }} ({{ $cliente->email }})
                                     </option>
                                     @endforeach
                                 </select>
-
                             </div>
                         </div>
 
@@ -686,23 +687,64 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
 
 
 <script>
-function actualizarObservaciones() {
-    const condicionId = document.getElementById('condiciones_comerciales').value;
-    const textareaObservaciones = document.getElementById('observaciones');
-    
-    if (!condicionId) {
-        textareaObservaciones.value = '';
-        return;
+    function actualizarObservaciones() {
+        const condicionId = document.getElementById('condiciones_comerciales').value;
+        const textareaObservaciones = document.getElementById('observaciones');
+
+        if (!condicionId) {
+            textareaObservaciones.value = '';
+            return;
+        }
+
+        fetch(`/condiciones-comerciales/${condicionId}/descripcion`)
+            .then(response => response.json())
+            .then(data => {
+                textareaObservaciones.value = data.descripcion || '';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
     }
-    
-    fetch(`/condiciones-comerciales/${condicionId}/descripcion`)
-        .then(response => response.json())
-        .then(data => {
-            textareaObservaciones.value = data.descripcion || '';
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-}
 </script>
+
+<script>
+$(document).ready(function() {
+    $('.select2-clientes').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Buscar cliente...',
+        allowClear: true,
+        width: '100%',
+        language: {
+            noResults: function() {
+                return "No se encontraron clientes";
+            }
+        },
+        templateResult: formatCliente,
+        templateSelection: formatClienteSelection
+    });
+
+    // Función para formatear cómo se muestran los resultados
+    function formatCliente(cliente) {
+        if (!cliente.id) return cliente.text;
+        
+        var $cliente = $(
+            '<div class="select2-clientes-result">' +
+                '<strong>' + cliente.text.split(' - ')[0] + '</strong>' +
+                '<br><small class="text-muted">' + 
+                cliente.text.split(' - ')[1] + '</small>' +
+            '</div>'
+        );
+        return $cliente;
+    }
+
+    // Función para formatear cómo se muestra la selección
+    function formatClienteSelection(cliente) {
+        if (!cliente.id) return cliente.text;
+        return cliente.text.split(' (')[0]; // Mostrar solo nombre y empresa
+    }
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 @endpush
