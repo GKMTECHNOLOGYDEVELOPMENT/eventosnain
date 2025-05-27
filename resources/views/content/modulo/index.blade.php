@@ -1,9 +1,14 @@
 @extends('layouts/contentNavbarLayout')
 
 @section('title', 'Lista de Módulos')
-
-<!-- jQuery (debe estar antes de los otros scripts) -->
+<!-- DataTables CSS -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<!-- DataTables JS (después de jQuery) -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -28,7 +33,6 @@
                             <th>Código</th>
                             <th>Marca</th>
                             <th>Modelo</th>
-                            <th>Descripción</th>
                             <th>Compra</th>
                             <th>Venta</th>
                             <th>Stock</th>
@@ -69,9 +73,6 @@
                 },
                 {
                     data: 'modelo'
-                },
-                {
-                    data: 'descripcion'
                 },
                 {
                     data: 'precio_compra'
