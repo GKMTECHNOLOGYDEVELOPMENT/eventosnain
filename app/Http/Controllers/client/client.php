@@ -801,10 +801,7 @@ class Client extends Controller
         $userId = auth()->id();
 
         // Obtener eventos a los que el usuario está asignado
-        $events = Salida::whereHas('users', function ($query) use ($userId) {
-            $query->where('user_id', $userId);
-        })->get();
-
+        $events = Salida::all();
         // $events = salida::all();
 
         // Mostrar el formulario para crear un nuevo cliente
