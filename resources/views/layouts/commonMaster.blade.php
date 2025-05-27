@@ -28,41 +28,41 @@
     <!-- SweetAlert2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
 
 
     <style>
-        .badge-primary-custom {
-            background-color: #007bff;
-            /* Azul para estado primario */
-            color: #fff;
-        }
+    .badge-primary-custom {
+        background-color: #007bff;
+        /* Azul para estado primario */
+        color: #fff;
+    }
 
-        .badge-warning-custom {
-            background-color: #ffc107;
-            /* Amarillo para estado de advertencia */
-            color: #212529;
-        }
+    .badge-warning-custom {
+        background-color: #ffc107;
+        /* Amarillo para estado de advertencia */
+        color: #212529;
+    }
 
-        .badge-success-custom {
-            background-color: #28a745;
-            /* Verde para estado exitoso */
-            color: #fff;
-        }
+    .badge-success-custom {
+        background-color: #28a745;
+        /* Verde para estado exitoso */
+        color: #fff;
+    }
 
-        .badge-danger-custom {
-            background-color: #dc3545;
-            /* Rojo para estado de peligro */
-            color: #fff;
-        }
+    .badge-danger-custom {
+        background-color: #dc3545;
+        /* Rojo para estado de peligro */
+        color: #fff;
+    }
 
-        .badge-info-custom {
-            background-color: #17a2b8;
-            /* Azul claro para información */
-            color: #fff;
-        }
+    .badge-info-custom {
+        background-color: #17a2b8;
+        /* Azul claro para información */
+        color: #fff;
+    }
     </style>
 
 
@@ -148,8 +148,8 @@
     <!-- Include Scripts for customizer, helper, analytics, config -->
     @include('layouts/sections/scriptsIncludes')
     <style>
-        /* Ensure that the demo table scrolls */
-        /* th,
+    /* Ensure that the demo table scrolls */
+    /* th,
     td {
         white-space: nowrap;
     }
@@ -163,64 +163,64 @@
         width: 90%;
     } */
 
-        /* Estilos para el preloader */
-        .preloader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 1);
-            /* Fondo blanco con opacidad */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
+    /* Estilos para el preloader */
+    .preloader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 1);
+        /* Fondo blanco con opacidad */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .spinner {
+        border: 8px solid rgba(255, 0, 0);
+        /* Color de fondo del spinner */
+        border-radius: 50%;
+        border-top: 8px solid #000;
+        /* Color del spinner */
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin-right: 20px;
+        /* Espacio entre el spinner y la barra de progreso */
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
         }
 
-        .spinner {
-            border: 8px solid rgba(255, 0, 0);
-            /* Color de fondo del spinner */
-            border-radius: 50%;
-            border-top: 8px solid #000;
-            /* Color del spinner */
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-right: 20px;
-            /* Espacio entre el spinner y la barra de progreso */
+        100% {
+            transform: rotate(360deg);
         }
+    }
 
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
+    /* Estilos para la barra de progreso */
+    .progress-container {
+        width: 200px;
+        height: 20px;
+        background-color: #f3f3f3;
+        border-radius: 5px;
+        overflow: hidden;
+    }
 
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Estilos para la barra de progreso */
-        .progress-container {
-            width: 200px;
-            height: 20px;
-            background-color: #f3f3f3;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0;
-            background-color: #4caf50;
-            text-align: center;
-            line-height: 20px;
-            /* Centra el texto verticalmente */
-            color: white;
-            border-radius: 5px;
-            transition: width 0.4s ease;
-        }
+    .progress-bar {
+        height: 100%;
+        width: 0;
+        background-color: #4caf50;
+        text-align: center;
+        line-height: 20px;
+        /* Centra el texto verticalmente */
+        color: white;
+        border-radius: 5px;
+        transition: width 0.4s ease;
+    }
     </style>
 </head>
 
@@ -289,63 +289,64 @@ new DataTable('#example', {
 
 
 <script>
-    new DataTable('#example');
-    // $(document).ready(function() {
-    //     // Setup - add a text input to each footer cell
-    //     $('#example tfoot th').each(function(i) {
-    //         var title = $('#example thead th')
-    //             .eq($(this).index())
-    //             .text();
-    //         $(this).html(
-    //             '<input type="text" placeholder="' + title + '" data-index="' + i + '" />'
-    //         );
-    //     });
+new DataTable('#example');
+// $(document).ready(function() {
+//     // Setup - add a text input to each footer cell
+//     $('#example tfoot th').each(function(i) {
+//         var title = $('#example thead th')
+//             .eq($(this).index())
+//             .text();
+//         $(this).html(
+//             '<input type="text" placeholder="' + title + '" data-index="' + i + '" />'
+//         );
+//     });
 
-    //     // DataTable
-    //     var table = $('#example').DataTable({
-    //         scrollY: '300px',
-    //         scrollX: true,
-    //         scrollCollapse: true,
-    //         paging: false,
-    //         fixedColumns: true,
-    //         dom: 'Bfrtip', // Define dónde aparecerán los botones
-    //         buttons: [
-    //             'copy',
-    //             'excel',
-    //             'pdf',
-    //             'print',
-    //             'colvis' // Botón para visibilidad de columnas
-    //         ]
-    //     });
+//     // DataTable
+//     var table = $('#example').DataTable({
+//         scrollY: '300px',
+//         scrollX: true,
+//         scrollCollapse: true,
+//         paging: false,
+//         fixedColumns: true,
+//         dom: 'Bfrtip', // Define dónde aparecerán los botones
+//         buttons: [
+//             'copy',
+//             'excel',
+//             'pdf',
+//             'print',
+//             'colvis' // Botón para visibilidad de columnas
+//         ]
+//     });
 
-    //     // Filter event handler
-    //     $(table.table().container()).on('keyup', 'tfoot input', function() {
-    //         table
-    //             .column($(this).data('index'))
-    //             .search(this.value)
-    //             .draw();
-    //     });
-    // });
-
-
+//     // Filter event handler
+//     $(table.table().container()).on('keyup', 'tfoot input', function() {
+//         table
+//             .column($(this).data('index'))
+//             .search(this.value)
+//             .draw();
+//     });
+// });
 
 
-    // $(document).ready(function() {
-    //     $('#example').DataTable({
-    //         dom: 'Bfrtip', // Define where the buttons will appear
-    //         buttons: [
-    //             'copy', 'excel', 'pdf', 'print', 'colvis' // Define the buttons you want to include
-    //         ],
-    //         // Additional DataTables configuration options if needed
-    //     });
-    // });
+
+
+// $(document).ready(function() {
+//     $('#example').DataTable({
+//         dom: 'Bfrtip', // Define where the buttons will appear
+//         buttons: [
+//             'copy', 'excel', 'pdf', 'print', 'colvis' // Define the buttons you want to include
+//         ],
+//         // Additional DataTables configuration options if needed
+//     });
+// });
 </script>
 
 
 
 <!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <!-- Bootstrap Bundle JS -->
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script> -->
 
@@ -386,20 +387,20 @@ new DataTable('#example', {
 
 
 <SCript>
-    document.addEventListener('DOMContentLoaded', function() {
-        var animation = lottie.loadAnimation({
-            container: document.getElementById('lottie-animation'), // el contenedor para la animación
-            renderer: 'svg',
-            loop: true,
-            autoplay: true,
-            path: 'C:/Users/user/Desktop/eventos-gkm/public/animations/Animation.json' // ruta al archivo JSON de la animación Lottie
-        });
-
-        // Elimina el preloader una vez que la página está completamente cargada
-        window.addEventListener('load', function() {
-            document.getElementById('preloader').style.display = 'none';
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    var animation = lottie.loadAnimation({
+        container: document.getElementById('lottie-animation'), // el contenedor para la animación
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'C:/Users/user/Desktop/eventos-gkm/public/animations/Animation.json' // ruta al archivo JSON de la animación Lottie
     });
+
+    // Elimina el preloader una vez que la página está completamente cargada
+    window.addEventListener('load', function() {
+        document.getElementById('preloader').style.display = 'none';
+    });
+});
 </script>
 
 <!-- <script>
