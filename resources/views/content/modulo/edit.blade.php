@@ -166,6 +166,21 @@
                         </div>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label" for="imagen_principal">
+                            <i class="fas fa-star me-2"></i>Imagen Principal
+                        </label>
+                        <select class="form-control" id="imagen_principal" name="imagen_principal">
+                            <option value="">Seleccionar imagen principal</option>
+                            @foreach($imagenes as $img)
+                            <option value="{{ $img->id }}" {{ $img->es_principal ? 'selected' : '' }}>
+                                {{ $img->nombre_archivo }}
+                            </option>
+                            @endforeach
+                        </select>
+
+                    </div>
+
                     <div class="d-flex justify-content-between">
                         <a href="{{ route('modulo-list') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i> Cancelar
@@ -184,6 +199,7 @@
                         <i class="fas fa-upload"></i> Subir Imágenes
                     </button>
                 </div>
+
 
                 <!-- Sección para mostrar imágenes y eliminar (fuera del form principal) -->
                 @if($modulo->imagenes->count())
@@ -224,225 +240,243 @@
 
 
 <script>
-    // Función para formatear moneda
-    function formatCurrency(input) {
-        // Eliminar todo lo que no sea número o punto decimal
-        let value = input.value.replace(/[^0-9.]/g, '');
+// Función para formatear moneda
+function formatCurrency(input) {
+    // Eliminar todo lo que no sea número o punto decimal
+    let value = input.value.replace(/[^0-9.]/g, '');
 
-        // Separar parte entera y decimal
-        let parts = value.split('.');
-        let integerPart = parts[0] || '0';
-        let decimalPart = parts.length > 1 ? '.' + parts[1].substring(0, 2) : '';
+    // Separar parte entera y decimal
+    let parts = value.split('.');
+    let integerPart = parts[0] || '0';
+    let decimalPart = parts.length > 1 ? '.' + parts[1].substring(0, 2) : '';
 
-        // Formatear el valor
-        input.value = integerPart + decimalPart;
+    // Formatear el valor
+    input.value = integerPart + decimalPart;
+}
+
+// Inicializar los campos de moneda al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Convertir los campos de precio a tipo text para el formato de moneda
+    document.getElementById('precio_compra').type = 'text';
+    document.getElementById('precio_venta').type = 'text';
+});
+
+// Configurar el formulario para enviar por AJAX
+document.getElementById('moduloEditForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const form = this;
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.innerHTML;
+
+    // Mostrar loading
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Actualizando...';
+    submitButton.disabled = true;
+
+    // Convertir campos de moneda
+    const formatCurrencyToNumber = (value) => parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
+    const precioCompra = formatCurrencyToNumber(form.precio_compra.value);
+    const precioVenta = formatCurrencyToNumber(form.precio_venta.value);
+
+    // Validaciones frontend
+    let errors = [];
+
+    if (precioCompra < 0) errors.push("El precio de compra no puede ser negativo");
+    if (precioVenta < 0) errors.push("El precio de venta no puede ser negativo");
+    if (precioVenta < precioCompra) errors.push("El precio de venta no puede ser menor al precio de compra");
+    if (form.stock_total.value < 0) errors.push("El stock total no puede ser negativo");
+    if (form.stock_minimo.value < 0) errors.push("El stock mínimo no puede ser negativo");
+
+
+    if (errors.length > 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de validación',
+            html: errors.join('<br>')
+        });
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
+        return;
     }
 
-    // Inicializar los campos de moneda al cargar la página
-    document.addEventListener('DOMContentLoaded', function() {
-        // Convertir los campos de precio a tipo text para el formato de moneda
-        document.getElementById('precio_compra').type = 'text';
-        document.getElementById('precio_venta').type = 'text';
-    });
+    // Preparar datos
+    const data = {
+        _token: form._token.value,
+        _method: 'PUT',
+        codigo_modulo: form.codigo_modulo.value,
+        marca: 'INTIFOLD',
+        modelo: form.modelo.value,
+        descripcion: form.descripcion.value,
+        precio_compra: precioCompra,
+        precio_venta: precioVenta,
+        stock_total: form.stock_total.value,
+        stock_minimo: form.stock_minimo.value,
+        fecha_registro: form.fecha_registro.value,
+        estado: document.querySelector('input[name="estado"]:checked').value,
+        imagen_principal: form.imagen_principal.value // <-- esta es la clave
+    };
 
-    // Configurar el formulario para enviar por AJAX
-    document.getElementById('moduloEditForm').addEventListener('submit', function(e) {
-        e.preventDefault();
+    // Enviar por AJAX
+    fetch(form.action, {
+            method: 'POST', // Laravel necesita POST para PUT/PATCH/DELETE
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': form._token.value // <-- aquí agregas el token
 
-        const form = this;
-        const submitButton = form.querySelector('button[type="submit"]');
-        const originalButtonText = submitButton.innerHTML;
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw err;
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: data.message,
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                window.location.href = "{{ route('modulo-list') }}";
+            });
+        })
+        .catch(error => {
+            let errorMsg = 'Error al actualizar';
+            if (error.errors) {
+                errorMsg = Object.values(error.errors).join('<br>');
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
 
-        // Mostrar loading
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Actualizando...';
-        submitButton.disabled = true;
-
-        // Convertir campos de moneda
-        const formatCurrencyToNumber = (value) => parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
-        const precioCompra = formatCurrencyToNumber(form.precio_compra.value);
-        const precioVenta = formatCurrencyToNumber(form.precio_venta.value);
-
-        // Validaciones frontend
-        let errors = [];
-
-        if (precioCompra < 0) errors.push("El precio de compra no puede ser negativo");
-        if (precioVenta < 0) errors.push("El precio de venta no puede ser negativo");
-        if (precioVenta < precioCompra) errors.push("El precio de venta no puede ser menor al precio de compra");
-        if (form.stock_total.value < 0) errors.push("El stock total no puede ser negativo");
-        if (form.stock_minimo.value < 0) errors.push("El stock mínimo no puede ser negativo");
-
-
-        if (errors.length > 0) {
             Swal.fire({
                 icon: 'error',
-                title: 'Error de validación',
-                html: errors.join('<br>')
+                title: 'Error',
+                html: errorMsg
             });
+        })
+        .finally(() => {
             submitButton.innerHTML = originalButtonText;
             submitButton.disabled = false;
-            return;
-        }
-
-        // Preparar datos
-        const data = {
-            _token: form._token.value,
-            _method: 'PUT',
-            codigo_modulo: form.codigo_modulo.value,
-            marca: 'INTIFOLD',
-            modelo: form.modelo.value,
-            descripcion: form.descripcion.value,
-            precio_compra: precioCompra,
-            precio_venta: precioVenta,
-            stock_total: form.stock_total.value,
-            stock_minimo: form.stock_minimo.value,
-            fecha_registro: form.fecha_registro.value,
-            estado: document.querySelector('input[name="estado"]:checked').value
-        };
-
-        // Enviar por AJAX
-        fetch(form.action, {
-                method: 'POST', // Laravel necesita POST para PUT/PATCH/DELETE
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': form._token.value // <-- aquí agregas el token
-
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw err;
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Éxito!',
-                    text: data.message,
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(() => {
-                    window.location.href = "{{ route('modulo-list') }}";
-                });
-            })
-            .catch(error => {
-                let errorMsg = 'Error al actualizar';
-                if (error.errors) {
-                    errorMsg = Object.values(error.errors).join('<br>');
-                } else if (error.message) {
-                    errorMsg = error.message;
-                }
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    html: errorMsg
-                });
-            })
-            .finally(() => {
-                submitButton.innerHTML = originalButtonText;
-                submitButton.disabled = false;
-            });
-    });
+        });
+});
 </script>
 
 <script>
-    document.getElementById('subirImagenesBtn').addEventListener('click', function() {
-        const input = document.getElementById('imagenes');
-        const files = input.files;
+document.getElementById('subirImagenesBtn').addEventListener('click', function() {
+    const input = document.getElementById('imagenes');
+    const files = input.files;
 
-        if (!files.length) {
-            Swal.fire('Advertencia', 'Selecciona al menos una imagen para subir.', 'warning');
-            return;
-        }
+    if (!files.length) {
+        Swal.fire('Advertencia', 'Selecciona al menos una imagen para subir.', 'warning');
+        return;
+    }
 
-        const formData = new FormData();
-        formData.append('_token', document.querySelector('input[name="_token"]').value);
-        for (const file of files) {
-            formData.append('imagenes[]', file);
-        }
+    const formData = new FormData();
+    formData.append('_token', document.querySelector('input[name="_token"]').value);
+    for (const file of files) {
+        formData.append('imagenes[]', file);
+    }
 
-        fetch(`{{ route('modulos.uploadImagenes', $modulo->id) }}`, {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Éxito', data.message, 'success').then(() => {
-                        location.reload();
-                    });
-                } else {
-                    throw new Error(data.message);
-                }
-            })
-            .catch(err => {
-                Swal.fire('Error', err.message, 'error');
-            });
-    });
+    fetch(`{{ route('modulos.uploadImagenes', $modulo->id) }}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire('Éxito', data.message, 'success').then(() => {
+                    location.reload();
+                });
+            } else {
+                throw new Error(data.message);
+            }
+        })
+        .catch(err => {
+            Swal.fire('Error', err.message, 'error');
+        });
+});
 </script>
 
 <script>
-    document.querySelectorAll('.btn-eliminar-imagen').forEach(button => {
-        button.addEventListener('click', function() {
-            const imagenId = this.dataset.id;
+document.querySelectorAll('.btn-eliminar-imagen').forEach(button => {
+    button.addEventListener('click', function() {
+        const imagenId = this.dataset.id;
 
-            Swal.fire({
-                title: '¿Eliminar imagen?',
-                text: "Esta acción no se puede deshacer",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch(`/modulo/eliminar/imagenes/${imagenId}`, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')
-                                    .value,
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                _method: 'DELETE'
-                            })
+        Swal.fire({
+            title: '¿Eliminar imagen?',
+            text: "Esta acción no se puede deshacer",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/modulo/eliminar/imagenes/${imagenId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')
+                                .value,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            _method: 'DELETE'
                         })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Eliminado',
-                                    text: data.message,
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Eliminado',
+                                text: data.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
 
-                                // Eliminar del DOM
-                                document.querySelector(`.imagen-card[data-id="${imagenId}"]`)
-                                    .remove();
-                            } else {
-                                throw new Error(data.message || 'Error al eliminar');
-                            }
-                        })
-                        .catch(err => {
-                            Swal.fire('Error', err.message, 'error');
-                        });
-                }
-            });
+                            // Eliminar del DOM
+                            document.querySelector(`.imagen-card[data-id="${imagenId}"]`)
+                                .remove();
+                        } else {
+                            throw new Error(data.message || 'Error al eliminar');
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire('Error', err.message, 'error');
+                    });
+            }
         });
     });
+});
 </script>
 
+<script>
+document.getElementById('imagenes').addEventListener('change', function(e) {
+    const select = document.getElementById('imagen_principal');
+
+    // No borrar las opciones del servidor, solo agregar las nuevas temporalmente
+    const existingOptions = Array.from(select.options).map(opt => opt.textContent);
+
+    Array.from(e.target.files).forEach((file, index) => {
+        if (!existingOptions.includes(file.name)) {
+            const option = document.createElement('option');
+            option.value = 'nuevo_' + index; // evitar conflicto con IDs de la base de datos
+            option.textContent = file.name;
+            select.appendChild(option);
+        }
+    });
+});
+</script>
 
 
 

@@ -32,17 +32,19 @@
                 @php
                 $fechaEmision = \Carbon\Carbon::parse($cotizacion->fecha_emision);
                 $fechaVencimiento = $fechaEmision->copy()->addDays($cotizacion->validez);
-                $diasRestantes = $fechaVencimiento->diffInDays(now(), false); // false para valores negativos
+                $diasRestantes = now()->diffInDays($fechaVencimiento, false); // ahora es fecha_actual - vencimiento
                 @endphp
                 <td>
-                    @if ($diasRestantes < 0) <span class="badge bg-label-danger">Vencida ({{ abs($diasRestantes) }}
-                        días)</span>
-                        @elseif ($diasRestantes === 0)
-                        <span class="badge bg-label-warning">Último día</span>
-                        @else
-                        <span class="badge bg-label-success">{{ $diasRestantes }} días</span>
-                        @endif
+                    @if ($diasRestantes > 0)
+                    <span class="badge bg-label-success">{{ $diasRestantes }} días restantes</span>
+                    @elseif ($diasRestantes === 0)
+                    <span class="badge bg-label-warning">Último día</span>
+                    @else
+                    <span class="badge bg-label-danger">Vencida ({{ abs($diasRestantes) }} días)</span>
+                    @endif
                 </td>
+
+
 
 
                 <td>$ {{ number_format($cotizacion->subtotal_sin_igv, 2) }}</td>
@@ -100,15 +102,40 @@
 
 
     <!-- Paginación mejorada -->
-    <div class="d-flex justify-content-between align-items-center mt-4">
-        <div class="showing-results text-muted small">
-            Mostrando {{ $cotizaciones->firstItem() }} a {{ $cotizaciones->lastItem() }} de {{ $cotizaciones->total() }}
-            registros
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4">
+        <div class="mb-2 mb-md-0">
+            <p class="mb-0 text-muted">
+                Mostrando <span class="fw-semibold">{{ $cotizaciones->firstItem() }}</span> a
+                <span class="fw-semibold">{{ $cotizaciones->lastItem() }}</span> de
+                <span class="fw-semibold">{{ $cotizaciones->total() }}</span> registros
+            </p>
         </div>
 
-        <div class="pagination-custom">
-            {{ $cotizaciones->onEachSide(1)->links() }}
-        </div>
+        <nav class="mt-2 mt-md-0">
+            <ul class="pagination pagination-sm mb-0">
+                {{-- Botón Anterior --}}
+                <li class="page-item {{ $cotizaciones->onFirstPage() ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ $cotizaciones->previousPageUrl() }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+
+                {{-- Números de página --}}
+                @foreach ($cotizaciones->getUrlRange(max(1, $cotizaciones->currentPage() - 2),
+                min($cotizaciones->lastPage(), $cotizaciones->currentPage() + 2)) as $page => $url)
+                <li class="page-item {{ $page == $cotizaciones->currentPage() ? 'active' : '' }}">
+                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                </li>
+                @endforeach
+
+                {{-- Botón Siguiente --}}
+                <li class="page-item {{ !$cotizaciones->hasMorePages() ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ $cotizaciones->nextPageUrl() }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
     </div>
 </div>
 
@@ -147,55 +174,55 @@
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var modal = document.getElementById('modalActualizarEstado');
-        var cotizacionIdInput = document.getElementById('cotizacion_id');
-        var nuevoEstadoSelect = document.getElementById('nuevo_estado');
-        var form = document.getElementById('formActualizarEstado');
+document.addEventListener('DOMContentLoaded', function() {
+    var modal = document.getElementById('modalActualizarEstado');
+    var cotizacionIdInput = document.getElementById('cotizacion_id');
+    var nuevoEstadoSelect = document.getElementById('nuevo_estado');
+    var form = document.getElementById('formActualizarEstado');
 
-        // Al abrir modal, cargar datos del botón que lo llamó
-        modal.addEventListener('show.bs.modal', function(event) {
-            var button = event.relatedTarget;
-            var cotizacionId = button.getAttribute('data-id');
-            var estadoActual = button.getAttribute('data-estado');
+    // Al abrir modal, cargar datos del botón que lo llamó
+    modal.addEventListener('show.bs.modal', function(event) {
+        var button = event.relatedTarget;
+        var cotizacionId = button.getAttribute('data-id');
+        var estadoActual = button.getAttribute('data-estado');
 
-            cotizacionIdInput.value = cotizacionId;
-            nuevoEstadoSelect.value = estadoActual;
-        });
-
-        // Manejar envío del formulario con AJAX
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            var cotizacionId = cotizacionIdInput.value;
-            var nuevoEstado = nuevoEstadoSelect.value;
-
-            fetch(`/cotizaciones/${cotizacionId}/estado`, {
-                    method: 'PUT',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        estado: nuevoEstado
-                    })
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Error actualizando el estado');
-                    return response.json();
-                })
-                .then(data => {
-                    // Cerrar modal
-                    var modalBootstrap = bootstrap.Modal.getInstance(modal);
-                    modalBootstrap.hide();
-
-                    // Opcional: refrescar la página o actualizar el badge del estado en la fila
-                    location.reload();
-                })
-                .catch(error => {
-                    alert('Error: ' + error.message);
-                });
-        });
+        cotizacionIdInput.value = cotizacionId;
+        nuevoEstadoSelect.value = estadoActual;
     });
+
+    // Manejar envío del formulario con AJAX
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        var cotizacionId = cotizacionIdInput.value;
+        var nuevoEstado = nuevoEstadoSelect.value;
+
+        fetch(`/cotizaciones/${cotizacionId}/estado`, {
+                method: 'PUT',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    estado: nuevoEstado
+                })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Error actualizando el estado');
+                return response.json();
+            })
+            .then(data => {
+                // Cerrar modal
+                var modalBootstrap = bootstrap.Modal.getInstance(modal);
+                modalBootstrap.hide();
+
+                // Opcional: refrescar la página o actualizar el badge del estado en la fila
+                location.reload();
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+    });
+});
 </script>
