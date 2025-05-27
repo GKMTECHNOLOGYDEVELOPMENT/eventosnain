@@ -25,9 +25,9 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <h2 class="page-title">Calendario</h2>
         <div>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#eventoModal">
+            <!-- <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#eventoModal">
                 ACTIVIDAD
-            </button>
+            </button> -->
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#salidaModal">
                 EVENTO
             </button>

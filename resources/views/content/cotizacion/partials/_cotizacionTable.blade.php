@@ -6,6 +6,7 @@
                 <th width="10%">Fecha</th>
                 <th width="12%">Cliente</th>
                 <th width="12%">Usuario</th>
+                <th width="10%">Validez Restante</th>
                 <th width="10%">Subtotal</th>
                 <th width="8%">IGV</th>
                 <th width="10%">Total</th>
@@ -27,6 +28,22 @@
                     {{ $cotizacion->usuario->name ?? 'No asignado' }}<br>
                     <small class="text-muted">{{ $cotizacion->usuario->email ?? '' }}</small>
                 </td>
+
+                @php
+                $fechaEmision = \Carbon\Carbon::parse($cotizacion->fecha_emision);
+                $fechaVencimiento = $fechaEmision->copy()->addDays($cotizacion->validez);
+                $diasRestantes = $fechaVencimiento->diffInDays(now(), false); // false para valores negativos
+                @endphp
+                <td>
+                    @if ($diasRestantes < 0) <span class="badge bg-label-danger">Vencida ({{ abs($diasRestantes) }}
+                        días)</span>
+                        @elseif ($diasRestantes === 0)
+                        <span class="badge bg-label-warning">Último día</span>
+                        @else
+                        <span class="badge bg-label-success">{{ $diasRestantes }} días</span>
+                        @endif
+                </td>
+
 
                 <td>$ {{ number_format($cotizacion->subtotal_sin_igv, 2) }}</td>
                 <td>$ {{ number_format($cotizacion->igv, 2) }}</td>
