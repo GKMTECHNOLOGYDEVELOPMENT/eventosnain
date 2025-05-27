@@ -47,13 +47,6 @@
                             <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="table-border-bottom-0">
-                        @include('content.client.partials._clientTable', [
-                            'clientes' => $clientes,
-                            'reuniones' => $reuniones,
-                            'observaciones' => $observaciones,
-                        ])
-                    </tbody>
                 </table>
             </div>
 
@@ -65,23 +58,6 @@
                 <p class="mt-2">Cargando más clientes...</p>
             </div>
 
-            <!-- Paginación mejorada -->
-            <div class="row mt-3">
-                <div class="col-md-6">
-                    <div class="text-muted">
-                        Mostrando <span class="fw-bold">{{ $clientes->firstItem() }}</span> a
-                        <span class="fw-bold">{{ $clientes->lastItem() }}</span> de
-                        <span class="fw-bold">{{ $clientes->total() }}</span> registros
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <nav aria-label="Page navigation" class="d-flex justify-content-end">
-                        <ul class="pagination pagination-sm mb-0">
-                            {{ $clientes->onEachSide(1)->links('pagination::bootstrap-4') }}
-                        </ul>
-                    </nav>
-                </div>
-            </div>
         </div>
     </div>
 @endsection
@@ -140,13 +116,53 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Inicializar DataTable si es necesario
             $('#client-table').DataTable({
-                responsive: true,
-                searching: true,
-                ordering: true,
-                paging: false, // Desactivamos la paginación de DataTable porque usamos la de Laravel
-                info: false,
+                processing: true,
+                serverSide: true,
+                ajax: '{{ route('api.clientes') }}',
+                columns: [{
+                        data: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'nombre'
+                    },
+                    {
+                        data: 'empresa'
+                    },
+                    {
+                        data: 'telefono'
+                    },
+                    {
+                        data: 'servicios'
+                    },
+                    {
+                        data: 'status',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'events_id'
+                    },
+                    {
+                        data: 'correo'
+                    },
+                    {
+                        data: 'whatsapp'
+                    },
+                    {
+                        data: 'llamada'
+                    },
+                    {
+                        data: 'reunion'
+                    },
+                    {
+                        data: 'acciones',
+                        orderable: false,
+                        searchable: false
+                    }
+                ],
                 language: {
                     processing: "Procesando...",
                     search: "Buscar:",
@@ -154,8 +170,6 @@
                     info: "Mostrando de _START_ a _END_ de _TOTAL_ registros",
                     infoEmpty: "Mostrando ningún registro.",
                     infoFiltered: "(filtrado de un total de _MAX_ registros)",
-                    infoPostFix: "",
-                    loadingRecords: "Cargando registros...",
                     zeroRecords: "No se encontraron registros",
                     emptyTable: "No hay datos disponibles en la tabla",
                     paginate: {
@@ -163,47 +177,9 @@
                         previous: "Anterior",
                         next: "Siguiente",
                         last: "Último"
-                    },
-                    aria: {
-                        sortAscending: ": activar para ordenar la columna ascendente",
-                        sortDescending: ": activar para ordenar la columna descendente"
                     }
                 }
             });
-
-
-            // Manejador de clics en los enlaces de paginación
-            // $(document).on('click', '.pagination a', function(e) {
-            //     e.preventDefault();
-            //     let url = $(this).attr('href');
-
-            //     // Mostrar el preloader
-            //     $('#preloader').show();
-            //     $('html, body').animate({
-            //         scrollTop: $('#preloader').offset().top - 100
-            //     }, 'slow');
-
-            //     $.ajax({
-            //         url: url,
-            //         success: function(data) {
-            //             // Actualizar el cuerpo de la tabla
-            //             $('tbody').html($(data).find('tbody').html());
-
-            //             // Actualizar la información del rango de registros
-            //             $('.text-muted').html($(data).find('.text-muted').html());
-
-            //             // Actualizar los links de paginación
-            //             $('.pagination').html($(data).find('.pagination').html());
-
-            //             // Ocultar el preloader
-            //             $('#preloader').hide();
-            //         },
-            //         error: function() {
-            //             alert('Error al cargar los datos');
-            //             $('#preloader').hide();
-            //         }
-            //     });
-            // });
         });
     </script>
 @endpush
