@@ -245,8 +245,10 @@ class ModuloController extends Controller
     $modulo->load(['imagenes' => function ($q) {
       $q->orderByDesc('es_principal'); // Principal primero
     }]);
+    $imagenes = \App\Models\ModuloImagen::where('modulo_id', $modulo->id)->get();
 
-    return view('content.modulo.edit', compact('modulo'));
+
+    return view('content.modulo.edit', compact('modulo', 'imagenes'));
   }
 
 
@@ -261,16 +263,31 @@ class ModuloController extends Controller
       'stock_total' => 'required|integer|min:0',
       'stock_minimo' => 'required|integer|min:0',
       'fecha_registro' => 'required|date',
-      'estado' => 'required|boolean'
+      'estado' => 'required|boolean',
+      'imagen_principal' => 'nullable|exists:modulo_imagenes,id' // validamos que exista
     ]);
 
     try {
       $modulo->update($validated);
+
+      // Si se seleccionó una imagen principal
+      if ($request->filled('imagen_principal')) {
+        // Desmarcar todas como no principal
+        \App\Models\ModuloImagen::where('modulo_id', $modulo->id)
+          ->update(['es_principal' => false]);
+
+        // Marcar la nueva como principal
+        \App\Models\ModuloImagen::where('id', $request->imagen_principal)
+          ->where('modulo_id', $modulo->id)
+          ->update(['es_principal' => true]);
+      }
+
       return response()->json(['success' => true, 'message' => 'Módulo actualizado correctamente']);
     } catch (\Exception $e) {
       return response()->json(['success' => false, 'message' => 'Error al actualizar: ' . $e->getMessage()], 500);
     }
   }
+
 
   public function destroy(Modulo $modulo)
   {

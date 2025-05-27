@@ -32,9 +32,9 @@
                 EVENTO
             </button>
 
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#salidauserModal">
+            <!-- <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#salidauserModal">
                 SALIDA
-            </button>
+            </button> -->
         </div>
 
     </div>
