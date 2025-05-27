@@ -7,8 +7,7 @@
 
 <!-- Librerías -->
 <script src="{{ asset('assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -38,7 +37,7 @@
 @endif
 
 <h4 class="py-3 mb-4"><span class="text-muted fw-light">Formulario /</span> Registrar Cotización</h4>
-<style>
+<!-- <style>
     .select2-result-cliente .cliente-nombre {
         font-weight: bold;
         margin-bottom: 2px;
@@ -51,6 +50,46 @@
 
     .select2-results__option--highlighted .select2-result-cliente .cliente-empresa {
         color: #f8f9fa;
+    }
+</style> -->
+
+<style>
+    .select-container {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .custom-input-group {
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .input-icon {
+        padding: 0.5rem;
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        border-right: none;
+        border-radius: 4px 0 0 4px;
+    }
+
+    .custom-select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 0 4px 4px 0;
+    }
+
+    /* Estilos para Select2 */
+    .select2-container {
+        width: 100% !important;
+    }
+
+    .select2-selection {
+        border: 1px solid #ddd !important;
+        border-radius: 0 4px 4px 0 !important;
+        height: auto !important;
+        padding: 0.3rem !important;
     }
 </style>
 <div class="row">
@@ -70,8 +109,8 @@
                             </label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
-                                <input type="text" class="form-control" id="codigo_cotizacion"
-                                    name="codigo_cotizacion" value="COT-{{ strtoupper(uniqid()) }}" readonly />
+                                <input type="text" class="form-control" id="codigo_cotizacion" name="codigo_cotizacion"
+                                    value="COT-{{ strtoupper(uniqid()) }}" readonly />
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -87,17 +126,14 @@
                     </div>
 
                     <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label" for="cliente_id">
-                                <i class="fas fa-user-tie me-2"></i>Cliente
-                            </label>
-                            <div class="input-group input-group-merge">
-                                <span class="input-group-text"><i class="fas fa-users"></i></span>
-                                <select class="form-control select2-clientes" id="cliente_id" name="cliente_id" required>
+                        <div class="select-container">
+                            <div class="custom-input-group">
+                                <span class="input-icon"><i class="fas fa-users"></i></span>
+                                <select class="custom-select" id="cliente_id" name="cliente_id" required>
                                     <option value="">Seleccione un cliente</option>
                                     @foreach ($clientes as $cliente)
                                     <option value="{{ $cliente->id }}"
-                                        {{ old('cliente_id', isset($cotizacion) ? $cotizacion->cliente_id : '') == $cliente->id ? 'selected' : '' }}>
+                                        {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>
                                         {{ $cliente->nombre }} - {{ $cliente->empresa }} ({{ $cliente->email }})
                                     </option>
                                     @endforeach
@@ -111,8 +147,8 @@
                             </label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
-                                <input type="number" class="form-control" id="validez" name="validez" value="15"
-                                    min="1" required />
+                                <input type="number" class="form-control" id="validez" name="validez" value="15" min="1"
+                                    required />
                             </div>
                         </div>
 
@@ -173,8 +209,7 @@
                                         <select class="form-control producto-select" name="productos[0][id]" required>
                                             <option value="">Seleccione un módulo</option>
                                             @foreach ($modulos as $modulo)
-                                            <option value="{{ $modulo->id }}"
-                                                data-precio="{{ $modulo->precio_venta }}">
+                                            <option value="{{ $modulo->id }}" data-precio="{{ $modulo->precio_venta }}">
                                                 {{ $modulo->codigo_modulo }} - {{ $modulo->marca }}
                                                 {{ $modulo->modelo }} -
                                                 ${{ number_format($modulo->precio_venta, 2) }}
@@ -183,21 +218,20 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <input type="number" class="form-control cantidad"
-                                            name="productos[0][cantidad]" min="1" value="1" required>
+                                        <input type="number" class="form-control cantidad" name="productos[0][cantidad]"
+                                            min="1" value="1" required>
                                     </td>
                                     <td>
                                         <div class="input-group">
                                             <span class="input-group-text">$</span>
-                                            <input type="text" class="form-control precio"
-                                                name="productos[0][precio]" value="0.00" required>
+                                            <input type="text" class="form-control precio" name="productos[0][precio]"
+                                                value="0.00" required>
                                         </div>
                                     </td>
                                     <td>
                                         <div class="input-group">
                                             <span class="input-group-text">$</span>
-                                            <input type="text" class="form-control subtotal" readonly
-                                                value="0.00">
+                                            <input type="text" class="form-control subtotal" readonly value="0.00">
                                         </div>
                                     </td>
                                     <td>
@@ -224,8 +258,7 @@
                                     <td>
                                         <div class="input-group">
                                             <span class="input-group-text">$</span>
-                                            <input type="text" class="form-control" id="igv" readonly
-                                                value="0.00">
+                                            <input type="text" class="form-control" id="igv" readonly value="0.00">
                                         </div>
                                     </td>
                                     <td></td>
@@ -296,11 +329,11 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
             allowInput: true
         });
 
-        // Inicializar select2
-        $('.select2').select2({
-            placeholder: "Seleccione una opción",
-            width: '100%'
-        });
+        // // Inicializar select2
+        // $('.select2').select2({
+        //     placeholder: "Seleccione una opción",
+        //     width: '100%'
+        // });
 
         // Agregar nueva fila de producto
         let rowCount = 1;
@@ -707,44 +740,58 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
     }
 </script>
 
-<script>
-$(document).ready(function() {
-    $('.select2-clientes').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Buscar cliente...',
-        allowClear: true,
-        width: '100%',
-        language: {
-            noResults: function() {
-                return "No se encontraron clientes";
-            }
-        },
-        templateResult: formatCliente,
-        templateSelection: formatClienteSelection
-    });
+<!-- <script>
+    $(document).ready(function() {
+        $('.select2-clientes').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Buscar cliente...',
+            allowClear: true,
+            width: '100%',
+            language: {
+                noResults: function() {
+                    return "No se encontraron clientes";
+                }
+            },
+            templateResult: formatCliente,
+            templateSelection: formatClienteSelection
+        });
 
-    // Función para formatear cómo se muestran los resultados
-    function formatCliente(cliente) {
-        if (!cliente.id) return cliente.text;
-        
-        var $cliente = $(
-            '<div class="select2-clientes-result">' +
+        // Función para formatear cómo se muestran los resultados
+        function formatCliente(cliente) {
+            if (!cliente.id) return cliente.text;
+
+            var $cliente = $(
+                '<div class="select2-clientes-result">' +
                 '<strong>' + cliente.text.split(' - ')[0] + '</strong>' +
-                '<br><small class="text-muted">' + 
+                '<br><small class="text-muted">' +
                 cliente.text.split(' - ')[1] + '</small>' +
-            '</div>'
-        );
-        return $cliente;
-    }
+                '</div>'
+            );
+            return $cliente;
+        }
 
-    // Función para formatear cómo se muestra la selección
-    function formatClienteSelection(cliente) {
-        if (!cliente.id) return cliente.text;
-        return cliente.text.split(' (')[0]; // Mostrar solo nombre y empresa
-    }
-});
+        // Función para formatear cómo se muestra la selección
+        function formatClienteSelection(cliente) {
+            if (!cliente.id) return cliente.text;
+            return cliente.text.split(' (')[0]; // Mostrar solo nombre y empresa
+        }
+    });
+</script> -->
+<script>
+    $(document).ready(function() {
+        $('#cliente_id').select2({
+            placeholder: "Seleccione un cliente",
+            allowClear: true,
+            width: '100%', // Ajuste responsivo
+            minimumResultsForSearch: 3, // Solo muestra búsqueda si hay 3+ opciones
+            language: {
+                noResults: function() {
+                    return "No hay resultados";
+                }
+            }
+        });
+    });
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 @endpush
