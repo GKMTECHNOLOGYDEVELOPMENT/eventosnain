@@ -872,53 +872,53 @@ class Client extends Controller
 
 
 
-   public function store(Request $request)
-{
-    // Validar los datos recibidos
-    $request->validate([
-        'nombre' => 'required|string|max:255',
-        'empresa' => 'nullable|string|max:255',
-        'telefono' => 'nullable|string|max:20',
-        'email' => 'nullable|email',
-        'servicios' => 'nullable|string|max:255',
-        'mensaje' => 'nullable|string',
-        'documento' => 'nullable|string|max:20', // Validación para el número de documento
-        'events_id' => 'nullable|exists:salida,id',
-    ]);
-
-    try {
-        // Obtener el ID del usuario autenticado
-        $userId = auth()->id();
-
-        // Crear un nuevo cliente
-        $cliente = Cliente::create([
-            'nombre' => $request->input('nombre'),
-            'empresa' => $request->input('empresa'),
-            'telefono' => $request->input('telefono'),
-            'email' => $request->input('email'),
-            'servicios' => $request->input('servicios'),
-            'mensaje' => $request->input('mensaje', ' '),
-            'documento' => $request->input('documento'), // Número de documento
-            'status' => 'PENDIENTE',
-            'correo' => 'PENDIENTE',
-            'whatsapp' => 'PENDIENTE',
-            'reunion' => 'PENDIENTE',
-            'contrato' => 'PENDIENTE',
-            'fecharegistro' => now()->toDateString(),
-            'user_id' => $userId,
-            'tecnico' => 'NO ASIGNADO',
-            'events_id' => $request->input('events_id'),
-            'llamada' => 'PENDIENTE',
-            'levantamiento' => 'PENDIENTE',
-            'cotizacion' => 'PENDIENTE',
+    public function store(Request $request)
+    {
+        // Validar los datos recibidos
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'empresa' => 'nullable|string|max:255',
+            'telefono' => 'nullable|string|max:20',
+            'email' => 'nullable|email',
+            'servicios' => 'nullable|string|max:255',
+            'mensaje' => 'nullable|string',
+            'documento' => 'nullable|string|max:30', // Validación para el número de documento
+            'events_id' => 'nullable|exists:salida,id',
         ]);
 
-        return redirect()->route('client-newClient')->with('success', 'Cliente guardado con éxito.');
-    } catch (\Exception $e) {
-        Log::error('Error al guardar el cliente: ' . $e->getMessage());
-        return redirect()->route('client-newClient')->with('error', 'Error al guardar el cliente.');
+        try {
+            // Obtener el ID del usuario autenticado
+            $userId = auth()->id();
+
+            // Crear un nuevo cliente
+            $cliente = Cliente::create([
+                'nombre' => $request->input('nombre'),
+                'empresa' => $request->input('empresa'),
+                'telefono' => $request->input('telefono'),
+                'email' => $request->input('email'),
+                'servicios' => $request->input('servicios'),
+                'mensaje' => $request->input('mensaje', ' '),
+                'documento' => $request->input('documento'), // Número de documento
+                'status' => 'PENDIENTE',
+                'correo' => 'PENDIENTE',
+                'whatsapp' => 'PENDIENTE',
+                'reunion' => 'PENDIENTE',
+                'contrato' => 'PENDIENTE',
+                'fecharegistro' => now()->toDateString(),
+                'user_id' => $userId,
+                'tecnico' => 'NO ASIGNADO',
+                'events_id' => $request->input('events_id'),
+                'llamada' => 'PENDIENTE',
+                'levantamiento' => 'PENDIENTE',
+                'cotizacion' => 'PENDIENTE',
+            ]);
+
+            return redirect()->route('client-newClient')->with('success', 'Cliente guardado con éxito.');
+        } catch (\Exception $e) {
+            Log::error('Error al guardar el cliente: ' . $e->getMessage());
+            return redirect()->route('client-newClient')->with('error', 'Error al guardar el cliente.');
+        }
     }
-}
 
 
 
@@ -1163,7 +1163,7 @@ class Client extends Controller
             'empresa' => 'nullable|string|max:255',
             'telefono' => 'nullable|string|max:20',
             'email' => 'nullable|email',
-            'tipo_cliente' => 'nullable|string|max:255',
+            'documento' => 'nullable|string|max:30', // Validación para el número de documento
             'servicios' => 'nullable|string|max:255',
             'mensaje' => 'nullable|string',
         ]);
@@ -1176,14 +1176,14 @@ class Client extends Controller
             'nombre' => $request->input('nombre'),
             'empresa' => $request->input('empresa'),
             'telefono' => $request->input('telefono'),
+            'documento' => $request->input('documento'),
             'email' => $request->input('email'),
-            'tipo_cliente' => $request->input('tipo_cliente'),
             'servicios' => $request->input('servicios'),
             'mensaje' => $request->input('mensaje'),
         ]);
 
         // Redirigir con mensaje de éxito
-        return redirect()->back()->with('success', 'Reunión guardada exitosamente.');
+        return redirect()->back()->with('success', 'Cliente Actualizado Correctamente.');
     }
 
     public function updateReunion(Request $request, $id)
