@@ -76,43 +76,84 @@
             </div>
         </div>
 
+        @php
+            $todasImagenes = [];
+        @endphp
 
-
-        <table class="w-full table-auto text-xs mt-6">
+        <!-- Tabla de productos -->
+        <table class="w-full table-auto text-xs border" style="border-collapse: collapse; border: 1px solid #D32F2F;">
             <thead style="background-color: #D32F2F; color: white;" class="uppercase font-bold">
                 <tr>
-                    <th class="p-2 rounded-tl-lg">N°</th>
-                    <th class="p-2">Marca</th>
-                    <th class="p-2">Modelo</th>
-                    <th class="p-2">Descripción</th>
-                    <th class="p-2">Cantidad</th>
-                    <th class="p-2">Precio</th>
-                    <th class="p-2 rounded-tr-lg">Total</th>
+                    <th class="p-2" style="border: 1px solid #D32F2F;">N°</th>
+                    <th class="p-2" style="border: 1px solid #D32F2F;">Marca</th>
+                    <th class="p-2" style="border: 1px solid #D32F2F;">Modelo</th>
+                    <th class="p-2" style="border: 1px solid #D32F2F;">Descripción</th>
+                    <th class="p-2" style="border: 1px solid #D32F2F;">Cantidad</th>
+                    <th class="p-2" style="border: 1px solid #D32F2F;">Precio</th>
+                    <th class="p-2" style="border: 1px solid #D32F2F;">Total</th>
                 </tr>
             </thead>
-
             <tbody>
                 @foreach ($cotizacion->productos as $item)
-                    {{-- Fila de datos --}}
-                    <tr class="border-t border-gray-300 text-center uppercase align-top">
-                        <td class="p-2">{{ $loop->iteration }}</td>
-                        <td class="p-2">{{ strtoupper($item->modulo->marca ?? '--') }}</td>
-                        <td class="p-2">{{ strtoupper($item->modulo->codigo_modulo) }}</td>
-                        <td class="p-2 text-center whitespace-pre-wrap">{{ strtoupper($item->modulo->descripcion) }}
+                    <tr class="text-center uppercase" style="vertical-align: middle;">
+                        <td class="p-2" style="border: 1px solid #D32F2F;">{{ $loop->iteration }}</td>
+                        <td class="p-2 uppercase" style="border: 1px solid #D32F2F;">{{ $item->modulo->marca ?? '--' }}
                         </td>
-                        <td class="p-2">{{ $item->cantidad }}</td>
-                        <td class="p-2">${{ number_format($item->precio_unitario, 2) }}</td>
-                        <td class="p-2">${{ number_format($item->subtotal, 2) }}</td>
+                        <td class="p-2 uppercase" style="border: 1px solid #D32F2F;">{{ $item->modulo->codigo_modulo }}
+                        </td>
+                        <td class="p-2 uppercase" style="border: 1px solid #D32F2F;">{{ $item->modulo->descripcion }}
+                        </td>
+                        <td class="p-2" style="border: 1px solid #D32F2F;">{{ $item->cantidad }}</td>
+                        <td class="p-2" style="border: 1px solid #D32F2F;">
+                            ${{ number_format($item->precio_unitario, 2) }}</td>
+                        <td class="p-2" style="border: 1px solid #D32F2F;">${{ number_format($item->subtotal, 2) }}
+                        </td>
                     </tr>
 
+                    @php
+                        if (!empty($item->imagenes_base64)) {
+                            foreach ($item->imagenes_base64 as $img) {
+                                $todasImagenes[] = $img;
+                            }
+                        }
+                    @endphp
+                @endforeach
+            </tbody>
+        </table>
 
-                    {{-- Fila de imágenes debajo --}}
+        <!-- Totales con ancho 1/6 y bordes definidos -->
+        <div class="text-xs mt-2 w-1/6 ml-auto">
+            <table class="w-full" style="border-collapse: collapse; border: 1px solid #D32F2F;">
+                <tr>
+                    <td class="text-right font-semibold p-2" style="border: 1px solid #D32F2F;">Subtotal:</td>
+                    <td class="text-right p-2" style="border: 1px solid #D32F2F;">
+                        ${{ number_format($cotizacion->subtotal_sin_igv, 2) }}</td>
+                </tr>
+                <tr>
+                    <td class="text-right font-semibold p-2" style="border: 1px solid #D32F2F;">IGV:</td>
+                    <td class="text-right p-2" style="border: 1px solid #D32F2F;">
+                        ${{ number_format($cotizacion->igv, 2) }}</td>
+                </tr>
+                <tr>
+                    <td class="text-right font-bold p-2" style="border: 1px solid #D32F2F;">Total:</td>
+                    <td class="text-right font-bold p-2" style="border: 1px solid #D32F2F;">
+                        ${{ number_format($cotizacion->total_con_igv, 2) }}</td>
+                </tr>
+            </table>
+        </div>
+
+
+
+        <!-- Imágenes agrupadas de todos los productos -->
+        @if (count($todasImagenes))
+            <div class="mt-4">
+                <table class="w-full">
                     <tr>
-                        <td colspan="7" class="py-2">
-                            <div class="flex justify-center gap-6">
-                                @foreach ($item->imagenes_base64 ?? [] as $imgBase64)
+                        <td class="py-2">
+                            <div class="flex justify-center flex-wrap gap-6">
+                                @foreach ($todasImagenes as $imgBase64)
                                     <div
-                                        style="width: 300px; height: 160px; overflow: hidden; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.25);">
+                                        style="width: 300px; height: 160px; overflow: hidden; border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.25);">
                                         <img src="{{ $imgBase64 }}" alt="img"
                                             style="width: 100%; height: 100%;">
                                     </div>
@@ -120,27 +161,10 @@
                             </div>
                         </td>
                     </tr>
-                @endforeach
-            </tbody>
+                </table>
+            </div>
+        @endif
 
-        </table>
-
-        <div class="mt-6 w-1/2 ml-auto text-xs">
-            <table class="w-full">
-                <tr>
-                    <td class="text-right font-semibold">Subtotal:</td>
-                    <td class="text-right">${{ number_format($cotizacion->subtotal_sin_igv, 2) }}</td>
-                </tr>
-                <tr>
-                    <td class="text-right font-semibold">IGV (18%):</td>
-                    <td class="text-right">${{ number_format($cotizacion->igv, 2) }}</td>
-                </tr>
-                <tr class="">
-                    <td class="text-right font-bold">Total:</td>
-                    <td class="text-right font-bold">${{ number_format($cotizacion->total_con_igv, 2) }}</td>
-                </tr>
-            </table>
-        </div>
     </main>
 
     @php
