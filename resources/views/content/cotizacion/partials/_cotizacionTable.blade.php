@@ -68,9 +68,10 @@
                             <i class="fas fa-edit"></i>
                         </a>
 
-                        <a href="" class="btn btn-sm btn-icon btn-danger me-2" title="Descargar PDF">
+                        <a href="{{ route('cotizaciones.exportarPdf', $cotizacion->id) }}" target="_blank" class="btn btn-sm btn-icon btn-danger me-2" title="Ver PDF">
                             <i class="fas fa-file-pdf"></i>
                         </a>
+                        
 
                         <a href="{{ route('cotizaciones.imprimir', $cotizacion->id) }}" target="_blank"
                             class="btn btn-sm btn-icon btn-primary me-2" title="Imprimir">

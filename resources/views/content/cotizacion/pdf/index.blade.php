@@ -17,9 +17,7 @@
             margin: 0;
             font-family: Arial, sans-serif;
             font-size: 14px;
-            color: #333;
-            padding: 60px 20px 20px 20px;
-            /* top, right, bottom, left */
+            padding: 4.5rem 20px;
         }
 
         .background {
@@ -98,19 +96,19 @@
                         <td class="p-2 text-center align-middle">{{ $loop->iteration }}</td>
                         <td class="p-2 text-center align-middle">{{ $item->modulo->marca ?? '--' }}</td>
                         <td class="p-2 text-center align-middle">{{ $item->modulo->codigo_modulo }}</td>
-                        <td class="p-2 text-center align-middle whitespace-pre-wrap">{{ $item->modulo->descripcion }}</td>
+                        <td class="p-2 text-center align-middle whitespace-pre-wrap">{{ $item->modulo->descripcion }}
+                        </td>
                         <td class="p-2 text-center align-middle">{{ $item->cantidad }}</td>
                         <td class="p-2 text-center align-middle">${{ number_format($item->precio_unitario, 2) }}</td>
                         <td class="p-2 text-center align-middle">${{ number_format($item->subtotal, 2) }}</td>
                     </tr>
-                    
+
                     {{-- Fila de imágenes debajo --}}
                     <tr>
                         <td colspan="7" class="py-2">
                             <div class="flex justify-center gap-6">
                                 @foreach ($item->imagenes_base64 ?? [] as $imgBase64)
-                                    <div
-                                        style="width: 250px; height: 160px; overflow: hidden; border-radius: 8px;">
+                                    <div style="width: 250px; height: 160px; overflow: hidden; border-radius: 8px;">
                                         <img src="{{ $imgBase64 }}" alt="img"
                                             style="width: 100%; height: 100%;">
                                     </div>
@@ -123,7 +121,7 @@
 
         </table>
 
-        <div class="mt-8 w-1/2 ml-auto text-xs">
+        <div class="mt-8 w-1/6 ml-auto text-xs">
             <table class="w-full">
                 <tr>
                     <td class="text-right font-semibold">Subtotal:</td>
@@ -139,33 +137,33 @@
                 </tr>
             </table>
         </div>
+        @php
+            $totalProductos = count($cotizacion->productos);
+            $paddingTopCondiciones = match (true) {
+                $totalProductos === 1 => '30px',
+                $totalProductos === 2 => '30px',
+                $totalProductos === 3 => '120px',
+                default => '0',
+            };
+        @endphp
+
+        <!-- Condiciones Comerciales FUERA del footer -->
+        <div class="text-xs" style="padding-top: {{ $paddingTopCondiciones }};">
+            <div class="w-full px-4 py-2 uppercase font-bold text-white rounded-t-md"
+                style="background-color: #D32F2F;">
+                Condiciones Comerciales
+            </div>
+            <div class="px-4 py-3 rounded-b-md leading-relaxed">
+                @if (!empty($cotizacion->observaciones))
+                    <p class="whitespace-pre-line uppercase">{{ $cotizacion->observaciones }}</p>
+                @else
+                    <div style="height: 80px;"></div> {{-- Espacio vacío si no hay texto --}}
+                @endif
+            </div>
+        </div>
     </main>
 
-    @php
-        $totalProductos = count($cotizacion->productos);
-        $paddingTopCondiciones = match (true) {
-            $totalProductos === 1 => '180px',
-            $totalProductos === 2 => '80px',
-            $totalProductos === 3 => '150px',
-            default => '0',
-        };
-    @endphp
-
-    <!-- Condiciones Comerciales FUERA del footer -->
-    <div class="text-xs" style="padding-top: {{ $paddingTopCondiciones }};">
-        <div class="w-full px-4 py-2 uppercase font-bold text-white rounded-t-md" style="background-color: #D32F2F;">
-            Condiciones Comerciales
-        </div>
-        <div class="px-4 py-3 rounded-b-md leading-relaxed">
-            @if (!empty($cotizacion->observaciones))
-                <p class="whitespace-pre-line uppercase">{{ $cotizacion->observaciones }}</p>
-            @else
-                <div style="height: 80px;"></div> {{-- Espacio vacío si no hay texto --}}
-            @endif
-        </div>
-    </div>
-
-    <footer style="page-break-inside: avoid; width: 100%; padding-top: 20px;">
+    <footer style="page-break-inside: avoid; width: 100%; padding-top: 0px;">
         <div class="flex flex-col md:flex-row gap-4 text-xs">
             <!-- BCP -->
             <div class="flex-1 p-3">
@@ -203,9 +201,8 @@
                 </div>
             </div>
         </div>
-
-
     </footer>
+
 
 </body>
 
