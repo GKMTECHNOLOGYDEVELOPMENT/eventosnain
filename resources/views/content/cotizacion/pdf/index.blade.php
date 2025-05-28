@@ -96,7 +96,7 @@
                         <td class="p-2 text-center align-middle">{{ $loop->iteration }}</td>
                         <td class="p-2 text-center align-middle">{{ $item->modulo->marca ?? '--' }}</td>
                         <td class="p-2 text-center align-middle">{{ $item->modulo->codigo_modulo }}</td>
-                        <td class="p-2 text-center align-middle whitespace-pre-wrap">{{ $item->modulo->descripcion }}
+                        <td class="p-2 text-center align-middle">{{ $item->modulo->descripcion }}
                         </td>
                         <td class="p-2 text-center align-middle">{{ $item->cantidad }}</td>
                         <td class="p-2 text-center align-middle">${{ number_format($item->precio_unitario, 2) }}</td>
@@ -108,7 +108,7 @@
                         <td colspan="7" class="py-2">
                             <div class="flex justify-center gap-6">
                                 @foreach ($item->imagenes_base64 ?? [] as $imgBase64)
-                                    <div style="width: 250px; height: 160px; overflow: hidden; border-radius: 8px;">
+                                    <div style="width: 250px; height: 160px; overflow: hidden; border-radius: 6px;">
                                         <img src="{{ $imgBase64 }}" alt="img"
                                             style="width: 100%; height: 100%;">
                                     </div>
@@ -157,22 +157,25 @@
                 @if (!empty($cotizacion->observaciones))
                     <p class="whitespace-pre-line uppercase">{{ $cotizacion->observaciones }}</p>
                 @else
-                    <div style="height: 80px;"></div> {{-- Espacio vacío si no hay texto --}}
+                    <div style="height: 80px;"></div>
                 @endif
             </div>
         </div>
     </main>
-
     <footer style="page-break-inside: avoid; width: 100%; padding-top: 0px;">
+        <!-- NUESTRAS CUENTAS BANCARIAS justo debajo -->
+        <div class="w-full px-4 uppercase font-bold text-black text-xs">
+            NUESTRAS CUENTAS BANCARIAS
+        </div>
         <div class="flex flex-col md:flex-row gap-4 text-xs">
             <!-- BCP -->
             <div class="flex-1 p-3">
                 <div class="flex items-center gap-2">
                     <img src="{{ $logoBCP }}" alt="BCP Logo"
-                        style="width: 60px; height: 25px; object-fit: contain;">
+                        style="width: 100px; height: 60px; object-fit: contain;">
                     <div class="leading-relaxed">
                         <p><strong></strong>191-2264695-0-05</p>
-                        <p style="white-space: nowrap;"><strong>CCI:</strong>002-19100226469500559</p>
+                        <p style="white-space: nowrap;"><strong>CCI:</strong> 002-19100226469500559</p>
                     </div>
                 </div>
             </div>
@@ -181,10 +184,10 @@
             <div class="flex-1 p-3">
                 <div class="flex items-center gap-2">
                     <img src="{{ $logoBBVA }}" alt="BBVA Logo"
-                        style="width: 60px; height: 25px; object-fit: contain;">
+                        style="width: 100px; height: 60px; object-fit: contain;">
                     <div class="leading-relaxed">
                         <p><strong></strong>0011-0124-01100035752</p>
-                        <p style="white-space: nowrap;"><strong>CCI:</strong>011-124-000100035752-53</p>
+                        <p style="white-space: nowrap;"><strong>CCI:</strong> 011-124-000100035752-53</p>
                     </div>
                 </div>
             </div>
@@ -193,10 +196,10 @@
             <div class="flex-1 p-3">
                 <div class="flex items-center gap-2">
                     <img src="{{ $logoInterbank }}" alt="Interbank Logo"
-                        style="width: 60px; height: 25px; object-fit: contain;">
+                        style="width: 100px; height: 60px; object-fit: contain;">
                     <div class="leading-relaxed">
                         <p><strong></strong>200-3004670297</p>
-                        <p style="white-space: nowrap;"><strong>CCI:</strong>003-200-003004670297-30</p>
+                        <p style="white-space: nowrap;"><strong>CCI:</strong> 003-200-003004670297-30</p>
                     </div>
                 </div>
             </div>
