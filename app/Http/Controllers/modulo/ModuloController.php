@@ -298,7 +298,22 @@ class ModuloController extends Controller
         'success' => true,
         'message' => 'Módulo eliminado correctamente'
       ]);
+    } catch (\Illuminate\Database\QueryException $e) {
+      // Verifica si el error es por restricción de clave foránea
+      if ($e->getCode() == '23000') {
+        return response()->json([
+          'success' => false,
+          'message' => 'No se puede eliminar el módulo porque está relacionado con una o más cotizaciones.'
+        ], 409); // 409 Conflict
+      }
+
+      // Otro error de base de datos
+      return response()->json([
+        'success' => false,
+        'message' => 'Error en la base de datos al intentar eliminar el módulo: ' . $e->getMessage()
+      ], 500);
     } catch (\Exception $e) {
+      // Cualquier otro error general
       return response()->json([
         'success' => false,
         'message' => 'Error al eliminar el módulo: ' . $e->getMessage()
