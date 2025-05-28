@@ -227,7 +227,7 @@ class CotizacionController extends Controller
             throw new \Exception("No se pudo abrir la imagen: $ruta");
         }
 
-        $destWidth = 300;
+        $destWidth = 250;
         $destHeight = 160;
 
         // Crear imagen redimensionada (300x160)
