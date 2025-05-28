@@ -682,10 +682,7 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
                     <p>La cotización se ha guardado correctamente</p>
                     <div class="d-flex justify-content-center gap-2 mt-3">
                         <a href="/cotizaciones/${response.id}/pdf" target="_blank" class="btn btn-danger">
-                    <i class="fas fa-file-pdf me-2"></i> Descargar PDF
-                </a>
-                <a href="/cotizaciones/${response.id}/imprimir?autoprint=true" target="_blank" class="btn btn-primary">
-                    <i class="fas fa-print me-2"></i> Imprimir
+                    <i class="fas fa-file-pdf me-2"></i> Ver PDF
                 </a>
                         <a href="/cotizaciones" class="btn btn-secondary">
                             <i class="fas fa-list me-2"></i> Ver Listado

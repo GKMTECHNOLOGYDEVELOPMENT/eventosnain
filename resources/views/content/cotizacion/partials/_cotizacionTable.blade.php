@@ -72,11 +72,6 @@
                             <i class="fas fa-file-pdf"></i>
                         </a>
                         
-
-                        <a href="{{ route('cotizaciones.imprimir', $cotizacion->id) }}" target="_blank"
-                            class="btn btn-sm btn-icon btn-primary me-2" title="Imprimir">
-                            <i class="fas fa-print"></i>
-                        </a>
                         <!-- Ver detalles -->
                         <a href="{{ route('cotizaciones.show', $cotizacion->id) }}"
                             class="btn btn-sm btn-icon btn-info me-2" title="Ver detalles">
