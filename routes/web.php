@@ -117,6 +117,7 @@ Route::put('/actualizar-informacion', [client::class, 'updatei'])->name('actuali
 
 
 
+Route::get('/cotizaciones/next-code', [CotizacionController::class, 'getNextCode'])->name('cotizaciones.next-code');
 
 
 

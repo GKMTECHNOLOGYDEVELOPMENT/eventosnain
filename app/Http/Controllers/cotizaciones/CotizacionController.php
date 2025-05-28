@@ -109,6 +109,16 @@ class CotizacionController extends Controller
         return view('content.cotizacion.new-cotizacion', compact('clientes', 'modulos', 'condicionesComerciales', 'codigoCotizacion'));
     }
 
+    public function getNextCode()
+    {
+        $lastCotizacion = Cotizacion::orderBy('id', 'desc')->first();
+        $nextId = $lastCotizacion ? $lastCotizacion->id + 1 : 1;
+        $codigo = 'CT-' . $nextId;
+
+        return response()->json(['codigo' => $codigo]);
+    }
+
+
     public function search(Request $request)
     {
         $search = $request->get('search');

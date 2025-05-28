@@ -111,7 +111,12 @@
                                 <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
                                 <input type="text" class="form-control" id="codigo_cotizacion" name="codigo_cotizacion"
                                     value="{{ $codigoCotizacion }}" readonly />
+                                <button class="btn btn-outline-secondary" type="button" id="btnRefreshCodigo"
+                                    title="Actualizar código">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
                             </div>
+
 
                         </div>
                         <div class="col-md-6">
@@ -791,6 +796,21 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
                 }
             }
         });
+    });
+</script>
+
+<script>
+    document.getElementById('btnRefreshCodigo').addEventListener('click', function() {
+        fetch('{{ route('
+                cotizaciones.next - code ') }}')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('codigo_cotizacion').value = data.codigo;
+            })
+            .catch(error => {
+                console.error('Error al actualizar código:', error);
+                alert('No se pudo actualizar el código');
+            });
     });
 </script>
 
