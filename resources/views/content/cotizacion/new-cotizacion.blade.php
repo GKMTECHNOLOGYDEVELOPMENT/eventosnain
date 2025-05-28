@@ -110,8 +110,9 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
                                 <input type="text" class="form-control" id="codigo_cotizacion" name="codigo_cotizacion"
-                                    value="COT-{{ strtoupper(uniqid()) }}" readonly />
+                                    value="{{ $codigoCotizacion }}" readonly />
                             </div>
+
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="fecha_emision">
