@@ -75,9 +75,11 @@ class Client extends Controller
         'reunion'
       ];
 
-      $query = Cliente::query();
+      // Cargar relación con el evento
+      $query = Cliente::with('evento');
       $total = Cliente::count();
 
+      // Filtro de búsqueda
       if (!empty($request->search['value'])) {
         $search = $request->search['value'];
         $query->where(function ($q) use ($search) {
@@ -90,6 +92,7 @@ class Client extends Controller
 
       $filtered = $query->count();
 
+      // Obtener los datos paginados y ordenados
       $clientes = $query
         ->offset($request->start)
         ->limit($request->length)
@@ -98,6 +101,15 @@ class Client extends Controller
 
       $data = [];
       foreach ($clientes as $i => $c) {
+        $modalId = "statusModal" . $c->id;
+
+        $botonModal = '<button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#' . $modalId . '" title="Actualizar estado">
+                    <i class="fas fa-info-circle"></i>
+                </button>';
+
+        $modal = view('content.client.modal.modal-estado', ['cliente' => $c])->render();
+
         $data[] = [
           'DT_RowIndex' => $request->start + $i + 1,
           'nombre' => $c->nombre,
@@ -105,7 +117,7 @@ class Client extends Controller
           'telefono' => $c->telefono,
           'servicios' => $c->servicios,
           'status' => '<span class="badge bg-' . ($c->status == 'Activo' ? 'success' : 'secondary') . '">' . $c->status . '</span>',
-          'events_id' => $c->events_id ?? '—',
+          'events_id' => $c->evento->title ?? '—',
           'correo' => $c->correo,
           'whatsapp' => $c->whatsapp,
           'llamada' => $c->llamada,
@@ -114,10 +126,11 @@ class Client extends Controller
             <div class="action-btns">
                 <a href="' . route('client.edit', $c->id) . '" class="btn btn-warning"><i class="bx bx-edit"></i></a>
                 <button class="btn btn-danger delete-cliente" data-id="' . $c->id . '"><i class="bx bx-trash"></i></button>
-            </div>',
-
+            </div>
+            ' . $modal,
         ];
       }
+
 
       return response()->json([
         'draw' => intval($request->draw),
@@ -134,7 +147,6 @@ class Client extends Controller
       ], 500);
     }
   }
-
 
 
 
@@ -1094,70 +1106,75 @@ class Client extends Controller
 
   public function updateStatus(Request $request, $id)
   {
-    // Validar los datos del formulario
-    $request->validate([
-      'whatsapp' => 'required|in:SI,NO,PENDIENTE',
-      'correo' => 'required|in:SI,NO,PENDIENTE',
-      'reunion' => 'required|in:SI,NO,PENDIENTE',
-      'observaciones_reunion' => 'nullable|string',
-      'fechareunion' => 'nullable|date',
-      'llamada' => 'required|in:SI,NO,PENDIENTE',
-      'observaciones_llamada' => 'nullable|string',
-      'fechallamada' => 'nullable|date',
-    ]);
+    try {
+      $request->validate([
+        'whatsapp' => 'required|in:SI,NO,PENDIENTE',
+        'correo' => 'required|in:SI,NO,PENDIENTE',
+        'reunion' => 'required|in:SI,NO,PENDIENTE',
+        'observaciones_reunion' => 'nullable|string',
+        'fechareunion' => 'nullable|date',
+        'llamada' => 'required|in:SI,NO,PENDIENTE',
+        'observaciones_llamada' => 'nullable|string',
+        'fechallamada' => 'nullable|date',
+      ]);
 
-    // Buscar el cliente por ID
-    $cliente = Cliente::findOrFail($id);
+      $cliente = Cliente::findOrFail($id);
 
-    // Obtener los valores del formulario
-    $whatsapp = $request->input('whatsapp');
-    $correo = $request->input('correo');
-    $reunion = $request->input('reunion');
-    $observaciones_reunion = $request->input('observaciones_reunion') ?: ''; // Asegurar que no sea NULL
-    $fechareunion = $request->input('fechareunion');
-    $llamada = $request->input('llamada');
-    $observaciones_llamada = $request->input('observaciones_llamada');
-    $fechallamada = $request->input('fechallamada');
+      $whatsapp = $request->input('whatsapp');
+      $correo = $request->input('correo');
+      $reunion = $request->input('reunion');
+      $observaciones_reunion = $request->input('observaciones_reunion') ?: '';
+      $fechareunion = $request->input('fechareunion');
+      $llamada = $request->input('llamada');
+      $observaciones_llamada = $request->input('observaciones_llamada');
+      $fechallamada = $request->input('fechallamada');
 
-    // Actualizar los campos del cliente
-    $cliente->update([
-      'whatsapp' => $whatsapp,
-      'correo' => $correo,
-      'reunion' => $reunion,
-      'llamada' => $llamada,
-    ]);
+      $cliente->update([
+        'whatsapp' => $whatsapp,
+        'correo' => $correo,
+        'reunion' => $reunion,
+        'llamada' => $llamada,
+      ]);
 
-    // Determinar el estado
-    $siCount = count(array_filter([$whatsapp, $correo, $reunion, $llamada], fn($value) => $value === 'SI'));
-    $noCount = count(array_filter([$whatsapp, $correo, $reunion, $llamada], fn($value) => $value === 'NO'));
+      $siCount = collect([$whatsapp, $correo, $reunion, $llamada])->filter(fn($v) => $v === 'SI')->count();
+      $noCount = collect([$whatsapp, $correo, $reunion, $llamada])->filter(fn($v) => $v === 'NO')->count();
 
-    if ($siCount == 4) {
-      $status = 'Atendido';
-    } elseif ($noCount >= 3) {
-      $status = 'Pendiente';
-    } else {
-      $status = 'En Proceso'; // Valor por defecto si hay mezcla de sí y no
+      if ($siCount == 4) {
+        $status = 'Atendido';
+      } elseif ($noCount >= 3) {
+        $status = 'Pendiente';
+      } else {
+        $status = 'En Proceso';
+      }
+
+      $cliente->status = $status;
+      $cliente->save();
+
+      Observacion::updateOrCreate(
+        ['id_cliente' => $id],
+        [
+          'observacionreunion' => $observaciones_reunion,
+          'fechareunion' => $fechareunion ?: now()->toDateString(),
+          'observacionllamada' => $observaciones_llamada,
+          'fechallamada' => $fechallamada ?: now()->toDateString(),
+        ]
+      );
+
+      return response()->json([
+        'success' => true,
+        'message' => 'Cliente actualizado con éxito.',
+        'cliente_id' => $cliente->id,
+        'status' => $status
+      ]);
+    } catch (\Throwable $e) {
+      return response()->json([
+        'success' => false,
+        'message' => 'Ocurrió un error al actualizar.',
+        'error' => $e->getMessage(),
+        'line' => $e->getLine()
+      ], 500);
     }
-
-    // Actualizar el estado del cliente
-    $cliente->status = $status;
-    $cliente->save();
-
-    // Encontrar o crear una observación para el cliente
-    Observacion::updateOrCreate(
-      ['id_cliente' => $id],
-      [
-        'observacionreunion' => $observaciones_reunion,
-        'fechareunion' => $fechareunion ?: now()->toDateString(),
-        'observacionllamada' => $observaciones_llamada,
-        'fechallamada' => $fechallamada ?: now()->toDateString(),
-      ]
-    );
-
-    // Redirigir de vuelta con un mensaje de éxito
-    return redirect()->back()->with('success', 'Datos actualizados con éxito.');
   }
-
 
 
 

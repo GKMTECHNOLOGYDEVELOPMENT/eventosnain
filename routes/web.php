@@ -214,7 +214,6 @@ Route::get('/modulos/editar/{modulo}', [ModuloController::class, 'edit'])->name(
 Route::put('/modulos/actualizar/{modulo}', [ModuloController::class, 'update'])->name('modulos.update');
 Route::delete('/modulos/{modulo}', [ModuloController::class, 'destroy'])
     ->name('modulos.destroy');
-
 Route::delete('modulo/eliminar/imagenes/{id}', [ModuloController::class, 'destroyImagen'])->name('imagenes.destroy');
 Route::post('/modulos/{modulo}/upload-imagenes', [ModuloController::class, 'uploadImagenes'])->name('modulos.uploadImagenes');
 //COTIZACIONES

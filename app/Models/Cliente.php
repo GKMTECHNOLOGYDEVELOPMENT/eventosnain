@@ -50,8 +50,14 @@ class Cliente extends Model
     {
         return $this->hasMany(Reunion::class, 'cliente_id');
     }
-        // public function eventos()
-        // {
-        //     return $this->hasMany(Event::class, 'cliente_id');
-        // }
+
+    public function evento()
+    {
+        return $this->belongsTo(Salida::class, 'events_id');
+    }
+
+    // public function eventos()
+    // {
+    //     return $this->hasMany(Event::class, 'cliente_id');
+    // }
 }
