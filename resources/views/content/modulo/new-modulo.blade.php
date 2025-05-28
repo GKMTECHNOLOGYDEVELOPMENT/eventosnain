@@ -83,6 +83,18 @@
                         </div>
                     </div>
 
+
+                    <div class="mb-3">
+                        <label class="form-label" for="detalles">
+                            <i class="fas fa-align-left me-2"></i>Detalles Tecnicos
+                        </label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="fas fa-info-circle"></i></span>
+                            <textarea class="form-control" id="detalles" name="detalles" rows="3"
+                                placeholder="Detalles Tecnicos del módulo"></textarea>
+                        </div>
+                    </div>
+
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label" for="precio_compra">

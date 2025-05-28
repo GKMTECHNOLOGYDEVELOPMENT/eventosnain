@@ -19,7 +19,8 @@ class Modulo extends Model
         'stock_total',
         'stock_minimo',
         'fecha_registro',
-        'estado'
+        'estado',
+        'detalles'
     ];
 
     protected $casts = [

@@ -139,6 +139,7 @@ class ModuloController extends Controller
       'codigo_modulo' => 'required|unique:modulos|max:20',
       'modelo' => 'required|max:50',
       'descripcion' => 'nullable',
+      'detalles' => 'nullable',
       'precio_compra' => 'required|numeric|min:0',
       'precio_venta' => 'required|numeric|min:0',
       'stock_total' => 'required|integer|min:0',
@@ -177,7 +178,8 @@ class ModuloController extends Controller
         'stock_total' => $request->stock_total,
         'stock_minimo' => $request->stock_minimo,
         'fecha_registro' => $request->fecha_registro,
-        'estado' => $request->estado
+        'estado' => $request->estado,
+        'detalles' => $request->detalles
       ]);
 
       Log::info('Módulo creado', ['modulo_id' => $modulo->id]);
@@ -258,6 +260,7 @@ class ModuloController extends Controller
       'codigo_modulo' => 'required|max:20|unique:modulos,codigo_modulo,' . $modulo->id,
       'modelo' => 'required|max:50',
       'descripcion' => 'nullable',
+      'detalles' => 'nullable',
       'precio_compra' => 'required|numeric|min:0',
       'precio_venta' => 'required|numeric|min:0',
       'stock_total' => 'required|integer|min:0',
