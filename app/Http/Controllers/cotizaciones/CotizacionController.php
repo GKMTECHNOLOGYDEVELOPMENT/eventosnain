@@ -100,7 +100,13 @@ class CotizacionController extends Controller
         $modulos = Modulo::where('estado', 1)->get();
         $condicionesComerciales = CondicionComercial::all(); // Asegúrate de tener el modelo correcto
 
-        return view('content.cotizacion.new-cotizacion', compact('clientes', 'modulos', 'condicionesComerciales'));
+        // Obtener el último ID de la tabla cotizaciones
+        $lastCotizacion = Cotizacion::orderBy('id', 'desc')->first();
+        $nextId = $lastCotizacion ? $lastCotizacion->id + 1 : 1;
+
+        $codigoCotizacion = 'CT-' . $nextId;
+
+        return view('content.cotizacion.new-cotizacion', compact('clientes', 'modulos', 'condicionesComerciales', 'codigoCotizacion'));
     }
 
     public function search(Request $request)
@@ -346,7 +352,7 @@ class CotizacionController extends Controller
         // Obtener todos los módulos activos
         $modulos = Modulo::where('estado', 1)->get();
         // Si quieres enviar los estados para un select
-          $condicionesComerciales = DB::table('condiciones_comerciales')->get(); // O usa el modelo si lo tienes
+        $condicionesComerciales = DB::table('condiciones_comerciales')->get(); // O usa el modelo si lo tienes
         $estados = [
             'pendiente' => 'Pendiente',
             'aprobada' => 'Aprobada',
@@ -354,7 +360,7 @@ class CotizacionController extends Controller
             'vencida' => 'Vencida'
         ];
 
-        return view('content.cotizacion.edit', compact('cotizacion', 'estados', 'clientes', 'modulos','condicionesComerciales'));
+        return view('content.cotizacion.edit', compact('cotizacion', 'estados', 'clientes', 'modulos', 'condicionesComerciales'));
     }
 
     public function update(Request $request, $id)

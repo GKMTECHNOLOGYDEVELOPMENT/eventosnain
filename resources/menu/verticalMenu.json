@@ -38,23 +38,22 @@
       "icon": "menu-icon tf-icons bx bx-calendar",
       "slug": "app-calendar"
     },
-   
     {
       "url": "/cotizaciones/",
       "name": "Cotizaciones",
-      "icon": "menu-icon tf-icons bx bx-grid",
+      "icon": "menu-icon tf-icons bx bx-dollar",
       "slug": "app-kanban"
     },
     {
       "url": "/modulo",
       "name": "Modulo",
-      "icon": "menu-icon tf-icons bx bx-grid",
+      "icon": "menu-icon tf-icons bx bx-cube",
       "slug": "app-kanban"
     },
     {
       "url": "/condiciones",
       "name": "Condiciones",
-      "icon": "menu-icon tf-icons bx bx-grid",
+      "icon": "menu-icon tf-icons bx bx-file",
       "slug": "app-kanban"
     }
   ]
