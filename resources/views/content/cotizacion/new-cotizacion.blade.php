@@ -798,7 +798,7 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
 
 <script>
     document.getElementById('btnRefreshCodigo').addEventListener('click', function() {
-        fetch('{{ route('cotizaciones.next-code ') }}')
+        fetch('{{ route('cotizaciones.next-code') }}')
             .then(response => response.json())
             .then(data => {
                 document.getElementById('codigo_cotizacion').value = data.codigo;
