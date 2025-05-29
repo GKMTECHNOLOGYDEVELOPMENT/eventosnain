@@ -26,8 +26,8 @@ class User extends Authenticatable
         'password',
         'email_password',
         'rol_id',
-         'photo',
-          'telefono'
+        'photo',
+        'telefono'
     ];
 
     /**
@@ -53,10 +53,10 @@ class User extends Authenticatable
 
     public function clientes()
     {
-        return $this->hasMany(Cliente::class, 'user_id'); // Ajusta 'user_id' al nombre de la columna de clave for¨¢nea en la tabla 'clientes'
+        return $this->hasMany(Cliente::class, 'user_id'); // Ajusta 'user_id' al nombre de la columna de clave forï¿½ï¿½nea en la tabla 'clientes'
     }
 
-    // Opcional: Relaci¨®n con el modelo Rol
+    // Opcional: Relaciï¿½ï¿½n con el modelo Rol
     public function rol()
     {
         return $this->belongsTo(Rol::class, 'rol_id', 'rol_id');
@@ -70,5 +70,19 @@ class User extends Authenticatable
     public function salidas()
     {
         return $this->belongsToMany(Salida::class, 'salida_user', 'user_id', 'salida_id');
+    }
+
+    public function cotizaciones()
+    {
+        return $this->hasMany(\App\Models\Cotizacion::class, 'user_id');
+    }
+    public function events()
+    {
+        return $this->hasMany(\App\Models\Event::class, 'user_id');
+    }
+
+    public function eventUsers()
+    {
+        return $this->hasMany(\App\Models\EventUser::class, 'user_id');
     }
 }

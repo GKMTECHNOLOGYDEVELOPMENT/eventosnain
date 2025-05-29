@@ -49,6 +49,7 @@ use App\Http\Controllers\form_layouts\VerticalForm;
 use App\Http\Controllers\form_layouts\HorizontalForm;
 use App\Http\Controllers\modulo\ModuloController;
 use App\Http\Controllers\tables\Basic as TablesBasic;
+use App\Http\Controllers\usuario\UsuarioController;
 use App\Models\CondicionComercial;
 
 // Main Page Route
@@ -77,7 +78,14 @@ Route::get('/cliente/{id}/cotizaciones', [Client::class, 'cotizaciones'])->name(
 Route::post('/client/update-proceso', [client::class, 'updateproceso'])->name('client.updateproceso')->middleware('auth');
 Route::post('/send-mail', [client::class, 'sendMail'])->name('send.mail')->middleware('auth');
 Route::post('/cliente/store', [client::class, 'atencion'])->name('client.atencion')->middleware('auth');
+//Usuarios 
 
+Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
+Route::get('/usuarios/{id}/edit', [UsuarioController::class, 'edit'])->name('usuarios.edit');
+Route::put('/usuarios/{id}', [UsuarioController::class, 'update'])->name('usuarios.update');
+Route::delete('/usuarios/delete/{id}', [UsuarioController::class, 'destroy'])->name('usuarios.destroy');
+Route::get('/usuarios/create', [UsuarioController::class, 'create'])->name('usuarios.create');
+Route::post('/usuarios/store', [UsuarioController::class, 'store'])->name('usuarios.store');
 
 //calendario
 Route::get('/client/clientCalendario', [Client::class, 'calendario'])->name('client-clientCalendario')->middleware('auth');

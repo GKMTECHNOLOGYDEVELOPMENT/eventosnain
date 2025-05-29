@@ -55,6 +55,12 @@
       "name": "Condiciones",
       "icon": "menu-icon tf-icons bx bx-file",
       "slug": "app-kanban"
+    },
+    {
+      "url": "/usuarios",
+      "name": "Lista de Usuarios",
+      "icon": "menu-icon tf-icons bx bx-user",
+      "slug": "app-usuarios"
     }
   ]
 }
