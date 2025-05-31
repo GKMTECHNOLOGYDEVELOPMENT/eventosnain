@@ -69,8 +69,8 @@
                             </label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-copyright"></i></span>
-                                <input type="text" class="form-control" id="marca" name="marca" value="INTIFOLD"
-                                    readonly />
+                                <input type="text" class="form-control" id="marca" name="marca"
+                                    value="{{ $modulo->marca}}" />
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -279,107 +279,242 @@
     document.getElementById('moduloEditForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const form = this;
-        const submitButton = form.querySelector('button[type="submit"]');
-        const originalButtonText = submitButton.innerHTML;
 
-        // Mostrar loading
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Actualizando...';
-        submitButton.disabled = true;
+        // Lista de campos obligatorios en el orden que deseas validar
+        const requiredFields = [{
+                id: 'codigo_modulo',
+                name: 'Código del Módulo',
+                type: 'text'
+            },
+            {
+                id: 'marca',
+                name: 'Marca',
+                type: 'text'
+            },
+            {
+                id: 'modelo',
+                name: 'Modelo',
+                type: 'text'
+            },
+            {
+                id: 'descripcion',
+                name: 'Descripción',
+                type: 'textarea'
+            },
+            {
+                id: 'detalles',
+                name: 'Detalles Técnicos',
+                type: 'textarea'
+            },
+            {
+                id: 'precio_compra',
+                name: 'Precio de Compra',
+                type: 'text'
+            },
+            {
+                id: 'precio_venta',
+                name: 'Precio de Venta',
+                type: 'text'
+            },
+            {
+                id: 'stock_total',
+                name: 'Stock Total',
+                type: 'number'
+            },
+            {
+                id: 'stock_minimo',
+                name: 'Stock Mínimo',
+                type: 'number'
+            },
+            {
+                id: 'imagen_principal',
+                name: 'Imagen Principal',
+                type: 'select'
+            }
+        ];
 
-        // Convertir campos de moneda
-        const formatCurrencyToNumber = (value) => parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
-        const precioCompra = formatCurrencyToNumber(form.precio_compra.value);
-        const precioVenta = formatCurrencyToNumber(form.precio_venta.value);
+        // Función para validar campos uno por uno
+        const validateFields = async (fields) => {
+            for (const field of fields) {
+                const element = document.getElementById(field.id);
+                let isEmpty = false;
 
-        // Validaciones frontend
-        let errors = [];
+                // Validación según el tipo de campo
+                switch (field.type) {
+                    case 'file':
+                        isEmpty = element.files.length === 0;
+                        break;
+                    case 'select':
+                        isEmpty = element.value === '';
+                        break;
+                    case 'textarea':
+                    case 'text':
+                    case 'number':
+                    default:
+                        isEmpty = !element.value.trim();
+                        break;
+                }
 
-        if (precioCompra < 0) errors.push("El precio de compra no puede ser negativo");
-        if (precioVenta < 0) errors.push("El precio de venta no puede ser negativo");
-        if (precioVenta < precioCompra) errors.push("El precio de venta no puede ser menor al precio de compra");
-        if (form.stock_total.value < 0) errors.push("El stock total no puede ser negativo");
-        if (form.stock_minimo.value < 0) errors.push("El stock mínimo no puede ser negativo");
+                if (isEmpty) {
+                    // Resaltar campo vacío
+                    element.classList.add('is-invalid');
 
+                    // Mostrar SweetAlert para este campo
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Campo obligatorio vacío',
+                        html: `El campo <strong>${field.name}</strong> es obligatorio`,
+                        footer: 'Por favor complete este campo',
+                        confirmButtonText: 'Entendido',
+                        allowOutsideClick: false
+                    });
 
-        if (errors.length > 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de validación',
-                html: errors.join('<br>')
-            });
-            submitButton.innerHTML = originalButtonText;
-            submitButton.disabled = false;
-            return;
-        }
+                    // Hacer scroll al campo vacío
+                    element.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
 
-        // Preparar datos
-        const data = {
-            _token: form._token.value,
-            _method: 'PUT',
-            codigo_modulo: form.codigo_modulo.value,
-            marca: 'INTIFOLD',
-            modelo: form.modelo.value,
-            descripcion: form.descripcion.value,
-            detalles: form.detalles.value,
-            precio_compra: precioCompra,
-            precio_venta: precioVenta,
-            stock_total: form.stock_total.value,
-            stock_minimo: form.stock_minimo.value,
-            fecha_registro: form.fecha_registro.value,
-            estado: document.querySelector('input[name="estado"]:checked').value,
-            imagen_principal: form.imagen_principal.value // <-- esta es la clave
+                    // Enfocar el campo vacío
+                    element.focus();
+
+                    return false; // Detener la validación
+                } else {
+                    // Remover clase de error si el campo está lleno
+                    element.classList.remove('is-invalid');
+                }
+            }
+            return true; // Todos los campos están llenos
         };
 
-        // Enviar por AJAX
-        fetch(form.action, {
-                method: 'POST', // Laravel necesita POST para PUT/PATCH/DELETE
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': form._token.value // <-- aquí agregas el token
+        // Validar campos uno por uno
+        validateFields(requiredFields).then((allValid) => {
+            if (!allValid) return; // Si hay campos vacíos, detener el proceso
 
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw err;
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Éxito!',
-                    text: data.message,
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(() => {
-                    window.location.href = "{{ route('modulo-list') }}";
-                });
-            })
-            .catch(error => {
-                let errorMsg = 'Error al actualizar';
-                if (error.errors) {
-                    errorMsg = Object.values(error.errors).join('<br>');
-                } else if (error.message) {
-                    errorMsg = error.message;
-                }
 
+
+            // Verificar que se haya seleccionado una imagen principal
+            const imagenPrincipal = document.getElementById('imagen_principal');
+            if (imagenPrincipal.value === '') {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
-                    html: errorMsg
+                    title: 'Imagen principal requerida',
+                    text: 'Debe seleccionar una imagen principal del módulo',
+                    confirmButtonText: 'Entendido'
                 });
-            })
-            .finally(() => {
+                imagenPrincipal.classList.add('is-invalid');
+                imagenPrincipal.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                imagenPrincipal.focus();
+                return;
+            }
+
+            const form = this;
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+
+            // Mostrar loading
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Actualizando...';
+            submitButton.disabled = true;
+
+            // Convertir campos de moneda
+            const formatCurrencyToNumber = (value) => parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
+            const precioCompra = formatCurrencyToNumber(form.precio_compra.value);
+            const precioVenta = formatCurrencyToNumber(form.precio_venta.value);
+
+            // Validaciones frontend
+            let errors = [];
+
+            if (precioCompra < 0) errors.push("El precio de compra no puede ser negativo");
+            if (precioVenta < 0) errors.push("El precio de venta no puede ser negativo");
+            if (precioVenta < precioCompra) errors.push(
+                "El precio de venta no puede ser menor al precio de compra");
+            if (form.stock_total.value < 0) errors.push("El stock total no puede ser negativo");
+            if (form.stock_minimo.value < 0) errors.push("El stock mínimo no puede ser negativo");
+
+
+            if (errors.length > 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de validación',
+                    html: errors.join('<br>')
+                });
                 submitButton.innerHTML = originalButtonText;
                 submitButton.disabled = false;
-            });
+                return;
+            }
+
+            // Preparar datos
+            const data = {
+                _token: form._token.value,
+                _method: 'PUT',
+                codigo_modulo: form.codigo_modulo.value,
+                marca: form.marca.value,
+                modelo: form.modelo.value,
+                descripcion: form.descripcion.value,
+                detalles: form.detalles.value,
+                precio_compra: precioCompra,
+                precio_venta: precioVenta,
+                stock_total: form.stock_total.value,
+                stock_minimo: form.stock_minimo.value,
+                fecha_registro: form.fecha_registro.value,
+                estado: document.querySelector('input[name="estado"]:checked').value,
+                imagen_principal: form.imagen_principal.value // <-- esta es la clave
+            };
+
+            // Enviar por AJAX
+            fetch(form.action, {
+                    method: 'POST', // Laravel necesita POST para PUT/PATCH/DELETE
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': form._token.value // <-- aquí agregas el token
+
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw err;
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: data.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        window.location.href = "{{ route('modulo-list') }}";
+                    });
+                })
+                .catch(error => {
+                    let errorMsg = 'Error al actualizar';
+                    if (error.errors) {
+                        errorMsg = Object.values(error.errors).join('<br>');
+                    } else if (error.message) {
+                        errorMsg = error.message;
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        html: errorMsg
+                    });
+                })
+                .finally(() => {
+                    submitButton.innerHTML = originalButtonText;
+                    submitButton.disabled = false;
+                });
+        });
+
     });
 </script>
 

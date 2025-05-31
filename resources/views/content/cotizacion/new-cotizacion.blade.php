@@ -126,7 +126,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-clock"></i></span>
                                 <input type="text" class="form-control flatpickr-date" id="fecha_emision"
-                                    name="fecha_emision" value="{{ now()->format('Y-m-d') }}"  />
+                                    name="fecha_emision" value="{{ now()->format('Y-m-d') }}" required />
                             </div>
                         </div>
                     </div>
@@ -135,7 +135,7 @@
                         <div class="select-container">
                             <div class="custom-input-group">
                                 <span class="input-icon"><i class="fas fa-users"></i></span>
-                                <select class="custom-select" id="cliente_id" name="cliente_id">
+                                <select class="custom-select" id="cliente_id" name="cliente_id" required>
                                     <option value="">Seleccione un cliente</option>
                                     @foreach ($clientes as $cliente)
                                     <option value="{{ $cliente->id }}"
@@ -149,12 +149,12 @@
 
                         <div class="col-md-6">
                             <label class="form-label" for="validez">
-                                <i class="fas fa-calendar-check me-2"></i>Validez (días)
+                                <i class="fas fa-calendar-check me-2"></i>Validezz (días)
                             </label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
                                 <input type="number" class="form-control" id="validez" name="validez" value="15" min="1"
-                                     />
+                                    required />
                             </div>
                         </div>
 
@@ -165,7 +165,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-file-contract"></i></span>
                                 <select class="form-control" id="condiciones_comerciales" name="condiciones_comerciales"
-                                     onchange="actualizarObservaciones()">
+                                    required onchange="actualizarObservaciones()">
                                     <option value="">Seleccione una opción</option>
                                     @foreach($condicionesComerciales as $condicion)
                                     <option value="{{ $condicion->id }}">{{ $condicion->nombre }}</option>
@@ -212,7 +212,7 @@
                             <tbody>
                                 <tr>
                                     <td>
-                                        <select class="form-control producto-select" name="productos[0][id]" >
+                                        <select class="form-control producto-select" name="productos[0][id]" required>
                                             <option value="">Seleccione un módulo</option>
                                             @foreach ($modulos as $modulo)
                                             <option value="{{ $modulo->id }}" data-precio="{{ $modulo->precio_venta }}">
@@ -225,13 +225,13 @@
                                     </td>
                                     <td>
                                         <input type="number" class="form-control cantidad" name="productos[0][cantidad]"
-                                            min="1" value="1" >
+                                            min="1" value="1" required>
                                     </td>
                                     <td>
                                         <div class="input-group">
                                             <span class="input-group-text">$</span>
                                             <input type="text" class="form-control precio" name="productos[0][precio]"
-                                                value="0.00" >
+                                                value="0.00" required>
                                         </div>
                                     </td>
                                     <td>
@@ -347,20 +347,20 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
             const newRow = `
                 <tr>
                     <td>
-                        <select class="form-control producto-select" name="productos[${rowCount}][id]" >
+                        <select class="form-control producto-select" name="productos[${rowCount}][id]" required>
                             <option value="">Seleccione un módulo</option>
                             {!! $modulosOptions !!}
                         </select>
                     </td>
                     <td>
                         <input type="number" class="form-control cantidad" name="productos[${rowCount}][cantidad]" 
-                            min="1" value="1" >
+                            min="1" value="1" required>
                     </td>
                     <td>
                         <div class="input-group">
                             <span class="input-group-text">$</span>
                             <input type="text" class="form-control precio" name="productos[${rowCount}][precio]" 
-                                value="0.00" >
+                                value="0.00" required>
                         </div>
                     </td>
                     <td>
@@ -517,20 +517,20 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
             const newRow = `
                 <tr>
                     <td>
-                        <select class="form-control producto-select" name="productos[${rowCount}][id]" >
+                        <select class="form-control producto-select" name="productos[${rowCount}][id]" required>
                             <option value="">Seleccione un módulo</option>
                             {!! $modulosOptions !!}
                         </select>
                     </td>
                     <td>
                         <input type="number" class="form-control cantidad" name="productos[${rowCount}][cantidad]" 
-                            min="1" value="1" >
+                            min="1" value="1" required>
                     </td>
                     <td>
                         <div class="input-group">
                             <span class="input-group-text">$</span>
                             <input type="text" class="form-control precio" name="productos[${rowCount}][precio]" 
-                                value="0.00" >
+                                value="0.00" required>
                         </div>
                     </td>
                     <td>
@@ -632,46 +632,47 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
         doc.save(`cotizacion-${codigo}.pdf`);
     });
 </script>
+
 <script>
     $(document).ready(function() {
         $('#cotizacionForm').submit(function(e) {
             e.preventDefault();
-            
+
             // Resetear clases de error
             $('.is-invalid').removeClass('is-invalid');
-            
+
             // Validar campos obligatorios
             let isValid = true;
             const errors = [];
-            
+
             // Validar cliente
             if (!$('#cliente_id').val()) {
                 errors.push('• Debe seleccionar un cliente');
                 $('#cliente_id').addClass('is-invalid');
                 isValid = false;
             }
-            
+
             // Validar validez
             if (!$('#validez').val() || $('#validez').val() <= 0) {
                 errors.push('• La validez debe ser mayor a 0 días');
                 $('#validez').addClass('is-invalid');
                 isValid = false;
             }
-            
+
             // Validar condiciones comerciales
             if (!$('#condiciones_comerciales').val()) {
                 errors.push('• Debe seleccionar condiciones comerciales');
                 $('#condiciones_comerciales').addClass('is-invalid');
                 isValid = false;
             }
-            
+
             // Validar observaciones
             if (!$('#observaciones').val().trim()) {
                 errors.push('• Las observaciones son obligatorias');
                 $('#observaciones').addClass('is-invalid');
                 isValid = false;
             }
-            
+
             // Validar al menos un producto
             if ($('#productosTable tbody tr').length === 0) {
                 errors.push('• Debe agregar al menos un producto');
@@ -862,7 +863,8 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
 
 <script>
     document.getElementById('btnRefreshCodigo').addEventListener('click', function() {
-        fetch('{{ route('cotizaciones.next-code') }}')
+        fetch('{{ route('
+                cotizaciones.next - code ') }}')
             .then(response => response.json())
             .then(data => {
                 document.getElementById('codigo_cotizacion').value = data.codigo;
