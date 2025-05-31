@@ -149,7 +149,7 @@
 
                         <div class="col-md-6">
                             <label class="form-label" for="validez">
-                                <i class="fas fa-calendar-check me-2"></i>Validez (días)
+                                <i class="fas fa-calendar-check me-2"></i>Validezz (días)
                             </label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
