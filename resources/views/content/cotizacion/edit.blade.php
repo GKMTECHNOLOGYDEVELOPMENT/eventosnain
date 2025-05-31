@@ -96,7 +96,7 @@
                             </label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-users"></i></span>
-                                <select class="form-control" id="cliente_id" name="cliente_id" required>
+                                <select class="form-control" id="cliente_id" name="cliente_id">
                                     @foreach($clientes as $cliente)
                                     <option value="{{ $cliente->id }}"
                                         {{ $cliente->id == $cotizacion->cliente_id ? 'selected' : '' }}>
@@ -115,7 +115,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
                                 <input type="number" class="form-control" id="validez" name="validez"
-                                    value="{{ old('validez', $cotizacion->validez) }}" min="1" required />
+                                    value="{{ old('validez', $cotizacion->validez) }}" min="1"/>
                             </div>
                         </div>
 
@@ -125,7 +125,7 @@
                             </label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-file-contract"></i></span>
-                                <select class="form-control" id="condiciones_comerciales" name="condiciones_comerciales" required onchange="actualizarObservaciones()">
+                                <select class="form-control" id="condiciones_comerciales" name="condiciones_comerciales" onchange="actualizarObservaciones()">
                                     <option value="">Seleccione una opción</option>
                                     @foreach($condicionesComerciales as $condicion)
                                     <option value="{{ $condicion->id }}"
@@ -596,91 +596,147 @@ $modulosOptions .= '<option value="'.$modulo->id.'" data-precio="'.$modulo->prec
         doc.save(`cotizacion-${codigo}.pdf`);
     });
 </script>
-
 <script>
-    $('#cotizacionForm').submit(function(e) {
-        e.preventDefault();
+    $(document).ready(function() {
+        $('#cotizacionForm').submit(function(e) {
+            e.preventDefault();
 
-        const form = this;
-        const cotizacionId = $(form).data('id'); // Asume que el form tiene un data-id con el ID de la cotización
-        const submitButton = $(form).find('button[type="submit"]');
-        const originalButtonText = submitButton.html();
+            const form = this;
+            const cotizacionId = $(form).data('id');
+            const submitButton = $(form).find('button[type="submit"]');
+            const originalButtonText = submitButton.html();
 
-        submitButton.html('<i class="fas fa-spinner fa-spin me-2"></i> Actualizando...');
-        submitButton.prop('disabled', true);
+            // Resetear errores visuales
+            $('.is-invalid').removeClass('is-invalid');
 
-        const formData = {
-            codigo_cotizacion: $('#codigo_cotizacion').val(),
-            fecha_emision: $('#fecha_emision').val(),
-            cliente_id: $('#cliente_id').val(),
-            validez: $('#validez').val(),
-            condiciones_comerciales: $('#condiciones_comerciales').val(),
-            observaciones: $('#observaciones').val(),
-            productos: []
-        };
+            // Validación de campos
+            // Validar cliente
+            if (!$('#cliente_id').val()) {
+                $('#cliente_id').addClass('is-invalid');
+                mostrarAlertaError('Debe seleccionar un cliente', '#cliente_id');
+                return false;
+            }
 
-        $('#productosTable tbody tr').each(function(index) {
-            const productoId = $(this).find('.producto-select').val();
-            const cantidad = $(this).find('.cantidad').val();
-            const precio = $(this).find('.precio').val().replace(/[^0-9.]/g, '');
+            // Validar validez
+            if (!$('#validez').val() || $('#validez').val() <= 0) {
+                $('#validez').addClass('is-invalid');
+                mostrarAlertaError('La validez debe ser mayor a 0 días', '#validez');
+                return false;
+            }
 
-            formData.productos.push({
-                id: productoId,
-                cantidad: cantidad,
-                precio: precio
+            // Validar condiciones comerciales
+            if (!$('#condiciones_comerciales').val()) {
+                $('#condiciones_comerciales').addClass('is-invalid');
+                mostrarAlertaError('Debe seleccionar condiciones comerciales', '#condiciones_comerciales');
+                return false;
+            }
+
+            // Validar observaciones
+            if (!$('#observaciones').val().trim()) {
+                $('#observaciones').addClass('is-invalid');
+                mostrarAlertaError('Las observaciones son obligatorias', '#observaciones');
+                return false;
+            }
+
+            // Validar al menos un producto
+            if ($('#productosTable tbody tr').length === 0) {
+                mostrarAlertaError('Debe agregar al menos un producto');
+                return false;
+            }
+
+            // Si todo está bien, continuar
+            submitButton.html('<i class="fas fa-spinner fa-spin me-2"></i> Actualizando...');
+            submitButton.prop('disabled', true);
+
+            const formData = {
+                codigo_cotizacion: $('#codigo_cotizacion').val(),
+                fecha_emision: $('#fecha_emision').val(),
+                cliente_id: $('#cliente_id').val(),
+                validez: $('#validez').val(),
+                condiciones_comerciales: $('#condiciones_comerciales').val(),
+                observaciones: $('#observaciones').val(),
+                productos: []
+            };
+
+            $('#productosTable tbody tr').each(function(index) {
+                const productoId = $(this).find('.producto-select').val();
+                const cantidad = $(this).find('.cantidad').val();
+                const precio = $(this).find('.precio').val().replace(/[^0-9.]/g, '');
+
+                formData.productos.push({
+                    id: productoId,
+                    cantidad: cantidad,
+                    precio: precio
+                });
+            });
+
+            $.ajax({
+                url: `/cotizaciones/update/${cotizacionId}`,
+                type: 'PUT',
+                data: JSON.stringify(formData),
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Accept': 'application/json'
+                },
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Cotización actualizada!',
+                        html: `
+                            <p>La cotización se ha actualizado correctamente.</p>
+                            <div class="d-flex justify-content-center gap-2 mt-3">
+                                <a href="/cotizaciones/${response.id}/pdf" target="_blank" class="btn btn-danger">
+                                    <i class="fas fa-file-pdf me-2"></i> Ver PDF
+                                </a>
+                                <a href="/cotizaciones" class="btn btn-secondary">
+                                    <i class="fas fa-list me-2"></i> Ver Listado
+                                </a>
+                            </div>
+                        `,
+                        showConfirmButton: false,
+                        showCloseButton: true
+                    });
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Error al actualizar la cotización';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).join('<br>');
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        html: errorMessage
+                    });
+                },
+                complete: function() {
+                    submitButton.html(originalButtonText);
+                    submitButton.prop('disabled', false);
+                }
             });
         });
 
-        // Enviar la solicitud AJAX para actualizar (PUT)
-        $.ajax({
-            url: `/cotizaciones/update/${cotizacionId}`, // Ruta para actualizar
-            type: 'PUT',
-            data: JSON.stringify(formData),
-            contentType: 'application/json',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                'Accept': 'application/json'
-            },
-            success: function(response) {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Cotización actualizada!',
-                    html: `
-                        <p>La cotización se ha actualizado correctamente.</p>
-                        <div class="d-flex justify-content-center gap-2 mt-3">
-                            <a href="/cotizaciones/${response.id}/pdf" target="_blank" class="btn btn-danger">
-                                <i class="fas fa-file-pdf me-2"></i> Ver PDF
-                            </a>
-                            <a href="/cotizaciones" class="btn btn-secondary">
-                                <i class="fas fa-list me-2"></i> Ver Listado
-                            </a>
-                        </div>
-                    `,
-                    showConfirmButton: false,
-                    showCloseButton: true
-                });
-            },
-            error: function(xhr) {
-                let errorMessage = 'Error al actualizar la cotización';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    errorMessage = Object.values(xhr.responseJSON.errors).join('<br>');
-                }
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    html: errorMessage
-                });
-            },
-            complete: function() {
-                submitButton.html(originalButtonText);
-                submitButton.prop('disabled', false);
-            }
-        });
+        // Función para mostrar el primer error
+        function mostrarAlertaError(mensaje, selector = null) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Campo requerido',
+                text: mensaje,
+                confirmButtonText: 'Entendido',
+                customClass: {
+                    confirmButton: 'btn btn-primary'
+                },
+                buttonsStyling: false
+            }).then(() => {
+                if (selector) $(selector).focus();
+            });
+        }
     });
 </script>
+
 
 <script>
 // Variable para controlar si las observaciones han sido modificadas manualmente

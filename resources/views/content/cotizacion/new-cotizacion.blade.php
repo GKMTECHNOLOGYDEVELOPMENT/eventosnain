@@ -126,7 +126,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-clock"></i></span>
                                 <input type="text" class="form-control flatpickr-date" id="fecha_emision"
-                                    name="fecha_emision" value="{{ now()->format('Y-m-d') }}" required />
+                                    name="fecha_emision" value="{{ now()->format('Y-m-d') }}"/>
                             </div>
                         </div>
                     </div>
@@ -135,7 +135,7 @@
                         <div class="select-container">
                             <div class="custom-input-group">
                                 <span class="input-icon"><i class="fas fa-users"></i></span>
-                                <select class="custom-select" id="cliente_id" name="cliente_id" required>
+                                <select class="custom-select" id="cliente_id" name="cliente_id">
                                     <option value="">Seleccione un cliente</option>
                                     @foreach ($clientes as $cliente)
                                     <option value="{{ $cliente->id }}"
@@ -153,8 +153,7 @@
                             </label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
-                                <input type="number" class="form-control" id="validez" name="validez" value="15" min="1"
-                                    required />
+                                <input type="number" class="form-control" id="validez" name="validez" value="15" min="1"/>
                             </div>
                         </div>
 
@@ -165,7 +164,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-file-contract"></i></span>
                                 <select class="form-control" id="condiciones_comerciales" name="condiciones_comerciales"
-                                    required onchange="actualizarObservaciones()">
+                                    onchange="actualizarObservaciones()">
                                     <option value="">Seleccione una opción</option>
                                     @foreach($condicionesComerciales as $condicion)
                                     <option value="{{ $condicion->id }}">{{ $condicion->nombre }}</option>
@@ -212,7 +211,7 @@
                             <tbody>
                                 <tr>
                                     <td>
-                                        <select class="form-control producto-select" name="productos[0][id]" required>
+                                        <select class="form-control producto-select" name="productos[0][id]">
                                             <option value="">Seleccione un módulo</option>
                                             @foreach ($modulos as $modulo)
                                             <option value="{{ $modulo->id }}" data-precio="{{ $modulo->precio_venta }}">
@@ -632,7 +631,6 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
         doc.save(`cotizacion-${codigo}.pdf`);
     });
 </script>
-
 <script>
     $(document).ready(function() {
         $('#cotizacionForm').submit(function(e) {
@@ -643,57 +641,38 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
 
             // Validar campos obligatorios
             let isValid = true;
-            const errors = [];
 
             // Validar cliente
             if (!$('#cliente_id').val()) {
-                errors.push('• Debe seleccionar un cliente');
                 $('#cliente_id').addClass('is-invalid');
-                isValid = false;
+                mostrarAlertaError('Debe seleccionar un cliente', '#cliente_id');
+                return false;
             }
 
             // Validar validez
             if (!$('#validez').val() || $('#validez').val() <= 0) {
-                errors.push('• La validez debe ser mayor a 0 días');
                 $('#validez').addClass('is-invalid');
-                isValid = false;
+                mostrarAlertaError('La validez debe ser mayor a 0 días', '#validez');
+                return false;
             }
 
             // Validar condiciones comerciales
             if (!$('#condiciones_comerciales').val()) {
-                errors.push('• Debe seleccionar condiciones comerciales');
                 $('#condiciones_comerciales').addClass('is-invalid');
-                isValid = false;
+                mostrarAlertaError('Debe seleccionar condiciones comerciales', '#condiciones_comerciales');
+                return false;
             }
 
             // Validar observaciones
             if (!$('#observaciones').val().trim()) {
-                errors.push('• Las observaciones son obligatorias');
                 $('#observaciones').addClass('is-invalid');
-                isValid = false;
+                mostrarAlertaError('Las observaciones son obligatorias', '#observaciones');
+                return false;
             }
 
             // Validar al menos un producto
             if ($('#productosTable tbody tr').length === 0) {
-                errors.push('• Debe agregar al menos un producto');
-                isValid = false;
-            }
-
-            // Si hay errores, mostrar SweetAlert
-            if (!isValid) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Campos obligatorios',
-                    html: `Los siguientes campos son requeridos:<br><br>${errors.join('<br>')}`,
-                    confirmButtonText: 'Entendido',
-                    customClass: {
-                        confirmButton: 'btn btn-primary'
-                    },
-                    buttonsStyling: false
-                }).then(() => {
-                    // Enfocar el primer campo con error
-                    $('.is-invalid').first().focus();
-                });
+                mostrarAlertaError('Debe agregar al menos un producto');
                 return false;
             }
 
@@ -705,7 +684,6 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
             submitButton.html('<i class="fas fa-spinner fa-spin me-2"></i> Guardando...');
             submitButton.prop('disabled', true);
 
-            // Preparar los datos del formulario
             const formData = {
                 codigo_cotizacion: $('#codigo_cotizacion').val(),
                 fecha_emision: $('#fecha_emision').val(),
@@ -716,7 +694,6 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
                 productos: []
             };
 
-            // Recoger los productos
             $('#productosTable tbody tr').each(function(index) {
                 const productoId = $(this).find('.producto-select').val();
                 const cantidad = $(this).find('.cantidad').val();
@@ -729,7 +706,6 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
                 });
             });
 
-            // Enviar la solicitud AJAX
             $.ajax({
                 url: $(form).attr('action'),
                 type: 'POST',
@@ -740,21 +716,20 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
                     'Accept': 'application/json'
                 },
                 success: function(response) {
-                    // Mostrar SweetAlert con opciones
                     Swal.fire({
                         icon: 'success',
                         title: '¡Cotización creada!',
                         html: `
-                        <p>La cotización se ha guardado correctamente</p>
-                        <div class="d-flex justify-content-center gap-2 mt-3">
-                            <a href="/cotizaciones/${response.id}/pdf" target="_blank" class="btn btn-danger">
-                        <i class="fas fa-file-pdf me-2"></i> Ver PDF
-                    </a>
-                            <a href="/cotizaciones" class="btn btn-secondary">
-                                <i class="fas fa-list me-2"></i> Ver Listado
-                            </a>
-                        </div>
-                    `,
+                            <p>La cotización se ha guardado correctamente</p>
+                            <div class="d-flex justify-content-center gap-2 mt-3">
+                                <a href="/cotizaciones/${response.id}/pdf" target="_blank" class="btn btn-danger">
+                                    <i class="fas fa-file-pdf me-2"></i> Ver PDF
+                                </a>
+                                <a href="/cotizaciones" class="btn btn-secondary">
+                                    <i class="fas fa-list me-2"></i> Ver Listado
+                                </a>
+                            </div>
+                        `,
                         showConfirmButton: false,
                         showCloseButton: true
                     });
@@ -784,8 +759,25 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
                 }
             });
         });
+
+        // Función para mostrar un solo error
+        function mostrarAlertaError(mensaje, selector = null) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Campo requerido',
+                text: mensaje,
+                confirmButtonText: 'Entendido',
+                customClass: {
+                    confirmButton: 'btn btn-primary'
+                },
+                buttonsStyling: false
+            }).then(() => {
+                if (selector) $(selector).focus();
+            });
+        }
     });
 </script>
+
 
 <script>
     function actualizarObservaciones() {
