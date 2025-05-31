@@ -868,7 +868,7 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
                 document.getElementById('codigo_cotizacion').value = data.codigo;
             })
             .catch(error => {
-                console.error('Error al actualizar código:', error);
+                console.error('Error al actualizar códigoo:', error);
                 alert('No se pudo actualizar el código');
             });
     });
