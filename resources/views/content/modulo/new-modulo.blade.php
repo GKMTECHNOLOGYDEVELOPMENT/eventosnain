@@ -34,7 +34,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
                                 <input type="text" class="form-control" id="codigo_modulo" name="codigo_modulo"
-                                    placeholder="MOD-001" required />
+                                    placeholder="MOD-001" />
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -56,8 +56,8 @@
                             </label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-copyright"></i></span>
-                                <input type="text" class="form-control" id="marca" name="marca" value="INTIFOLD"
-                                    readonly />
+                                <input type="text" class="form-control" id="marca" name="marca"
+                                    placeholder="INTI FOLD" />
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -67,7 +67,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-shapes"></i></span>
                                 <input type="text" class="form-control" id="modelo" name="modelo"
-                                    placeholder="Ej: XYZ-2000" required />
+                                    placeholder="Ej: XYZ-2000" />
                             </div>
                         </div>
                     </div>
@@ -103,7 +103,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text">$</span>
                                 <input type="text" class="form-control currency-input" id="precio_compra"
-                                    name="precio_compra" placeholder="0.00" required oninput="formatCurrency(this)" />
+                                    name="precio_compra" placeholder="0.00" oninput="formatCurrency(this)" />
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -113,7 +113,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text">$</span>
                                 <input type="text" class="form-control currency-input" id="precio_venta"
-                                    name="precio_venta" placeholder="0.00" required oninput="formatCurrency(this)" />
+                                    name="precio_venta" placeholder="0.00" oninput="formatCurrency(this)" />
                             </div>
                         </div>
                     </div>
@@ -126,7 +126,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-layer-group"></i></span>
                                 <input type="number" class="form-control" id="stock_total" name="stock_total"
-                                    placeholder="0" required min="0" />
+                                    placeholder="0" min="0" />
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -136,7 +136,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-thermometer-half"></i></span>
                                 <input type="number" class="form-control" id="stock_minimo" name="stock_minimo"
-                                    placeholder="0" required min="0" />
+                                    placeholder="0" min="0" />
                             </div>
                         </div>
                     </div>
@@ -224,91 +224,244 @@
     document.getElementById('moduloForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const form = this;
-        const submitButton = form.querySelector('button[type="submit"]');
-        const originalButtonText = submitButton.innerHTML;
+        // Lista de campos obligatorios en el orden que deseas validar
+        const requiredFields = [{
+                id: 'codigo_modulo',
+                name: 'Código del Módulo',
+                type: 'text'
+            },
+            {
+                id: 'marca',
+                name: 'Marca',
+                type: 'text'
+            },
+            {
+                id: 'modelo',
+                name: 'Modelo',
+                type: 'text'
+            },
+            {
+                id: 'descripcion',
+                name: 'Descripción',
+                type: 'textarea'
+            },
+            {
+                id: 'detalles',
+                name: 'Detalles Técnicos',
+                type: 'textarea'
+            },
+            {
+                id: 'precio_compra',
+                name: 'Precio de Compra',
+                type: 'text'
+            },
+            {
+                id: 'precio_venta',
+                name: 'Precio de Venta',
+                type: 'text'
+            },
+            {
+                id: 'stock_total',
+                name: 'Stock Total',
+                type: 'number'
+            },
+            {
+                id: 'stock_minimo',
+                name: 'Stock Mínimo',
+                type: 'number'
+            },
+            {
+                id: 'imagenes',
+                name: 'Imágenes del Módulo',
+                type: 'file'
+            },
+            {
+                id: 'imagen_principal',
+                name: 'Imagen Principal',
+                type: 'select'
+            }
+        ];
 
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Guardando...';
-        submitButton.disabled = true;
+        // Función para validar campos uno por uno
+        const validateFields = async (fields) => {
+            for (const field of fields) {
+                const element = document.getElementById(field.id);
+                let isEmpty = false;
 
-        const formatCurrencyToNumber = (value) => parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
-        const precioCompra = formatCurrencyToNumber(form.precio_compra.value);
-        const precioVenta = formatCurrencyToNumber(form.precio_venta.value);
+                // Validación según el tipo de campo
+                switch (field.type) {
+                    case 'file':
+                        isEmpty = element.files.length === 0;
+                        break;
+                    case 'select':
+                        isEmpty = element.value === '';
+                        break;
+                    case 'textarea':
+                    case 'text':
+                    case 'number':
+                    default:
+                        isEmpty = !element.value.trim();
+                        break;
+                }
 
-        let errors = [];
+                if (isEmpty) {
+                    // Resaltar campo vacío
+                    element.classList.add('is-invalid');
 
-        if (precioCompra < 0) errors.push("El precio de compra no puede ser negativo");
-        if (precioVenta < 0) errors.push("El precio de venta no puede ser negativo");
-        if (precioVenta < precioCompra) errors.push("El precio de venta no puede ser menor al precio de compra");
-        if (form.stock_total.value < 0) errors.push("El stock total no puede ser negativo");
-        if (form.stock_minimo.value < 0) errors.push("El stock mínimo no puede ser negativo");
-
-        if (errors.length > 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de validación',
-                html: errors.join('<br>')
-            });
-            submitButton.innerHTML = originalButtonText;
-            submitButton.disabled = false;
-            return;
-        }
-
-        // ✅ Usamos FormData
-        const formData = new FormData(form);
-
-        // Set valores numéricos convertidos
-        formData.set('precio_compra', precioCompra);
-        formData.set('precio_venta', precioVenta);
-        formData.set('_token', document.querySelector('meta[name="csrf-token"]').content);
-
-        fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                    // ❌ No pongas Content-Type si usas FormData, el navegador lo maneja solo
-                },
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw err;
+                    // Mostrar SweetAlert para este campo
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Campo obligatorio vacío',
+                        html: `El campo <strong>${field.name}</strong> es obligatorio`,
+                        footer: 'Por favor complete este campo',
+                        confirmButtonText: 'Entendido',
+                        allowOutsideClick: false
                     });
-                }
-                return response.json();
-            })
-            .then(data => {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Éxito!',
-                    text: data.message,
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-                form.reset();
-                document.getElementById('imagen_principal').innerHTML =
-                    '<option value="">Seleccionar imagen principal</option>';
-            })
-            .catch(error => {
-                let errorMsg = 'Error al guardar';
-                if (error.errors) {
-                    errorMsg = Object.values(error.errors).join('<br>');
-                } else if (error.message) {
-                    errorMsg = error.message;
-                }
 
+                    // Hacer scroll al campo vacío
+                    element.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+
+                    // Enfocar el campo vacío
+                    element.focus();
+
+                    return false; // Detener la validación
+                } else {
+                    // Remover clase de error si el campo está lleno
+                    element.classList.remove('is-invalid');
+                }
+            }
+            return true; // Todos los campos están llenos
+        };
+
+        // Validar campos uno por uno
+        validateFields(requiredFields).then((allValid) => {
+            if (!allValid) return; // Si hay campos vacíos, detener el proceso
+
+            // Verificar que al menos se haya seleccionado una imagen
+            const imagenes = document.getElementById('imagenes');
+            if (imagenes.files.length === 0) {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
-                    html: errorMsg
+                    title: 'Imágenes requeridas',
+                    text: 'Debe seleccionar al menos una imagen del módulo',
+                    confirmButtonText: 'Entendido'
                 });
-            })
-            .finally(() => {
+                imagenes.classList.add('is-invalid');
+                imagenes.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                imagenes.focus();
+                return;
+            }
+
+            // Verificar que se haya seleccionado una imagen principal
+            const imagenPrincipal = document.getElementById('imagen_principal');
+            if (imagenPrincipal.value === '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Imagen principal requerida',
+                    text: 'Debe seleccionar una imagen principal del módulo',
+                    confirmButtonText: 'Entendido'
+                });
+                imagenPrincipal.classList.add('is-invalid');
+                imagenPrincipal.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                imagenPrincipal.focus();
+                return;
+            }
+
+            const form = this;
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Guardando...';
+            submitButton.disabled = true;
+
+            const formatCurrencyToNumber = (value) => parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
+            const precioCompra = formatCurrencyToNumber(form.precio_compra.value);
+            const precioVenta = formatCurrencyToNumber(form.precio_venta.value);
+
+            let errors = [];
+
+            if (precioCompra < 0) errors.push("El precio de compra no puede ser negativo");
+            if (precioVenta < 0) errors.push("El precio de venta no puede ser negativo");
+            if (precioVenta < precioCompra) errors.push(
+                "El precio de venta no puede ser menor al precio de compra");
+            if (form.stock_total.value < 0) errors.push("El stock total no puede ser negativo");
+            if (form.stock_minimo.value < 0) errors.push("El stock mínimo no puede ser negativo");
+
+            if (errors.length > 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de validación',
+                    html: errors.join('<br>')
+                });
                 submitButton.innerHTML = originalButtonText;
                 submitButton.disabled = false;
-            });
+                return;
+            }
+
+            // ✅ Usamos FormData
+            const formData = new FormData(form);
+
+            // Set valores numéricos convertidos
+            formData.set('precio_compra', precioCompra);
+            formData.set('precio_venta', precioVenta);
+            formData.set('_token', document.querySelector('meta[name="csrf-token"]').content);
+
+            fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw err;
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: data.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    form.reset();
+                    document.getElementById('imagen_principal').innerHTML =
+                        '<option value="">Seleccionar imagen principal</option>';
+                })
+                .catch(error => {
+                    let errorMsg = 'Error al guardar';
+                    if (error.errors) {
+                        errorMsg = Object.values(error.errors).join('<br>');
+                    } else if (error.message) {
+                        errorMsg = error.message;
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        html: errorMsg
+                    });
+                })
+                .finally(() => {
+                    submitButton.innerHTML = originalButtonText;
+                    submitButton.disabled = false;
+                });
+        });
     });
 </script>
 

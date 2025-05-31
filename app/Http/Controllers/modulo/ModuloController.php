@@ -138,6 +138,7 @@ class ModuloController extends Controller
     $validator = Validator::make($request->all(), [
       'codigo_modulo' => 'required|unique:modulos|max:20',
       'modelo' => 'required|max:50',
+      'marca' => 'required|max:50',
       'descripcion' => 'nullable',
       'detalles' => 'nullable',
       'precio_compra' => 'required|numeric|min:0',
@@ -170,7 +171,7 @@ class ModuloController extends Controller
     try {
       $modulo = Modulo::create([
         'codigo_modulo' => $request->codigo_modulo,
-        'marca' => 'INTIFOLD',
+        'marca' => $request->marca,
         'modelo' => $request->modelo,
         'descripcion' => $request->descripcion,
         'precio_compra' => $request->precio_compra,
@@ -259,6 +260,7 @@ class ModuloController extends Controller
     $validated = $request->validate([
       'codigo_modulo' => 'required|max:20|unique:modulos,codigo_modulo,' . $modulo->id,
       'modelo' => 'required|max:50',
+      'marca' => 'required|max:50',
       'descripcion' => 'nullable',
       'detalles' => 'nullable',
       'precio_compra' => 'required|numeric|min:0',

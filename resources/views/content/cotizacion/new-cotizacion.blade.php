@@ -634,93 +634,158 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
 </script>
 
 <script>
-    // Enviar formulario con AJAX
-    $('#cotizacionForm').submit(function(e) {
-        e.preventDefault();
+    $(document).ready(function() {
+        $('#cotizacionForm').submit(function(e) {
+            e.preventDefault();
 
-        const form = this;
-        const submitButton = $(form).find('button[type="submit"]');
-        const originalButtonText = submitButton.html();
+            // Resetear clases de error
+            $('.is-invalid').removeClass('is-invalid');
 
-        submitButton.html('<i class="fas fa-spinner fa-spin me-2"></i> Guardando...');
-        submitButton.prop('disabled', true);
+            // Validar campos obligatorios
+            let isValid = true;
+            const errors = [];
 
-        // Preparar los datos del formulario
-        const formData = {
-            codigo_cotizacion: $('#codigo_cotizacion').val(),
-            fecha_emision: $('#fecha_emision').val(),
-            cliente_id: $('#cliente_id').val(),
-            validez: $('#validez').val(),
-            condiciones_comerciales: $('#condiciones_comerciales').val(),
-            observaciones: $('#observaciones').val(),
-            productos: []
-        };
+            // Validar cliente
+            if (!$('#cliente_id').val()) {
+                errors.push('• Debe seleccionar un cliente');
+                $('#cliente_id').addClass('is-invalid');
+                isValid = false;
+            }
 
-        // Recoger los productos
-        $('#productosTable tbody tr').each(function(index) {
-            const productoId = $(this).find('.producto-select').val();
-            const cantidad = $(this).find('.cantidad').val();
-            const precio = $(this).find('.precio').val().replace(/[^0-9.]/g, '');
+            // Validar validez
+            if (!$('#validez').val() || $('#validez').val() <= 0) {
+                errors.push('• La validez debe ser mayor a 0 días');
+                $('#validez').addClass('is-invalid');
+                isValid = false;
+            }
 
-            formData.productos.push({
-                id: productoId,
-                cantidad: cantidad,
-                precio: precio
-            });
-        });
+            // Validar condiciones comerciales
+            if (!$('#condiciones_comerciales').val()) {
+                errors.push('• Debe seleccionar condiciones comerciales');
+                $('#condiciones_comerciales').addClass('is-invalid');
+                isValid = false;
+            }
 
-        // Enviar la solicitud AJAX
-        $.ajax({
-            url: $(form).attr('action'),
-            type: 'POST',
-            data: JSON.stringify(formData),
-            contentType: 'application/json',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                'Accept': 'application/json'
-            },
-            success: function(response) {
-                // Mostrar SweetAlert con opciones
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Cotización creada!',
-                    html: `
-                    <p>La cotización se ha guardado correctamente</p>
-                    <div class="d-flex justify-content-center gap-2 mt-3">
-                        <a href="/cotizaciones/${response.id}/pdf" target="_blank" class="btn btn-danger">
-                    <i class="fas fa-file-pdf me-2"></i> Ver PDF
-                </a>
-                        <a href="/cotizaciones" class="btn btn-secondary">
-                            <i class="fas fa-list me-2"></i> Ver Listado
-                        </a>
-                    </div>
-                `,
-                    showConfirmButton: false,
-                    showCloseButton: true
-                });
-            },
-            error: function(xhr) {
-                let errorMessage = 'Error al guardar la cotización';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    errorMessage = Object.values(xhr.responseJSON.errors).join('<br>');
-                }
+            // Validar observaciones
+            if (!$('#observaciones').val().trim()) {
+                errors.push('• Las observaciones son obligatorias');
+                $('#observaciones').addClass('is-invalid');
+                isValid = false;
+            }
 
+            // Validar al menos un producto
+            if ($('#productosTable tbody tr').length === 0) {
+                errors.push('• Debe agregar al menos un producto');
+                isValid = false;
+            }
+
+            // Si hay errores, mostrar SweetAlert
+            if (!isValid) {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
-                    html: errorMessage
+                    title: 'Campos obligatorios',
+                    html: `Los siguientes campos son requeridos:<br><br>${errors.join('<br>')}`,
+                    confirmButtonText: 'Entendido',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    },
+                    buttonsStyling: false
+                }).then(() => {
+                    // Enfocar el primer campo con error
+                    $('.is-invalid').first().focus();
                 });
-            },
-            complete: function() {
-                submitButton.html(originalButtonText);
-                submitButton.prop('disabled', false);
+                return false;
             }
+
+            // Si todo está bien, proceder con el envío del formulario
+            const form = this;
+            const submitButton = $(form).find('button[type="submit"]');
+            const originalButtonText = submitButton.html();
+
+            submitButton.html('<i class="fas fa-spinner fa-spin me-2"></i> Guardando...');
+            submitButton.prop('disabled', true);
+
+            // Preparar los datos del formulario
+            const formData = {
+                codigo_cotizacion: $('#codigo_cotizacion').val(),
+                fecha_emision: $('#fecha_emision').val(),
+                cliente_id: $('#cliente_id').val(),
+                validez: $('#validez').val(),
+                condiciones_comerciales: $('#condiciones_comerciales').val(),
+                observaciones: $('#observaciones').val(),
+                productos: []
+            };
+
+            // Recoger los productos
+            $('#productosTable tbody tr').each(function(index) {
+                const productoId = $(this).find('.producto-select').val();
+                const cantidad = $(this).find('.cantidad').val();
+                const precio = $(this).find('.precio').val().replace(/[^0-9.]/g, '');
+
+                formData.productos.push({
+                    id: productoId,
+                    cantidad: cantidad,
+                    precio: precio
+                });
+            });
+
+            // Enviar la solicitud AJAX
+            $.ajax({
+                url: $(form).attr('action'),
+                type: 'POST',
+                data: JSON.stringify(formData),
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Accept': 'application/json'
+                },
+                success: function(response) {
+                    // Mostrar SweetAlert con opciones
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Cotización creada!',
+                        html: `
+                        <p>La cotización se ha guardado correctamente</p>
+                        <div class="d-flex justify-content-center gap-2 mt-3">
+                            <a href="/cotizaciones/${response.id}/pdf" target="_blank" class="btn btn-danger">
+                        <i class="fas fa-file-pdf me-2"></i> Ver PDF
+                    </a>
+                            <a href="/cotizaciones" class="btn btn-secondary">
+                                <i class="fas fa-list me-2"></i> Ver Listado
+                            </a>
+                        </div>
+                    `,
+                        showConfirmButton: false,
+                        showCloseButton: true
+                    });
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Error al guardar la cotización';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).join('<br>');
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        html: errorMessage,
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        },
+                        buttonsStyling: false
+                    });
+                },
+                complete: function() {
+                    submitButton.html(originalButtonText);
+                    submitButton.prop('disabled', false);
+                }
+            });
         });
     });
 </script>
-
 
 <script>
     function actualizarObservaciones() {
@@ -798,7 +863,8 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
 
 <script>
     document.getElementById('btnRefreshCodigo').addEventListener('click', function() {
-        fetch('{{ route(' cotizaciones.next-code ') }}')
+        fetch('{{ route('
+                cotizaciones.next - code ') }}')
             .then(response => response.json())
             .then(data => {
                 document.getElementById('codigo_cotizacion').value = data.codigo;
