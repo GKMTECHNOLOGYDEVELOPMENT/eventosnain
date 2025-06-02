@@ -93,14 +93,14 @@
                 @foreach ($cotizacion->productos as $item)
                     {{-- Fila de datos --}}
                     <tr class="border-t border-gray-300 uppercase">
-                        <td class="p-2 text-center align-middle">{{ $loop->iteration }}</td>
-                        <td class="p-2 text-center align-middle">{{ $item->modulo->marca ?? '--' }}</td>
-                        <td class="p-2 text-center align-middle">{{ $item->modulo->codigo_modulo }}</td>
-                        <td class="p-2 text-center align-middle">{{ $item->modulo->descripcion }}
+                        <td class="p-2 text-center align-top">{{ $loop->iteration }}</td>
+                        <td class="p-2 text-center align-top">{{ $item->modulo->marca ?? '--' }}</td>
+                        <td class="p-2 text-center align-top">{{ $item->modulo->codigo_modulo }}</td>
+                        <td class="p-2 text-justify align-top">{{ $item->modulo->descripcion }}
                         </td>
-                        <td class="p-2 text-center align-middle">{{ $item->cantidad }}</td>
-                        <td class="p-2 text-center align-middle">${{ number_format($item->precio_unitario, 2) }}</td>
-                        <td class="p-2 text-center align-middle">${{ number_format($item->subtotal, 2) }}</td>
+                        <td class="p-2 text-center align-top">{{ $item->cantidad }}</td>
+                        <td class="p-2 text-center align-top">${{ number_format($item->precio_unitario, 2) }}</td>
+                        <td class="p-2 text-center align-top">${{ number_format($item->subtotal, 2) }}</td>
                     </tr>
 
                     {{-- Fila de imágenes debajo --}}

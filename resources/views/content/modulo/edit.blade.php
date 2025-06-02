@@ -626,6 +626,29 @@
             }
         });
     });
+    const textarea = document.getElementById('descripcion');
+        const maxWords = 50;
+
+        textarea.addEventListener('input', function(e) {
+            const words = this.value.trim().split(/\s+/);
+            if (words.length > maxWords) {
+                // Previene escribir más
+                const trimmed = words.slice(0, maxWords).join(' ');
+                this.value = trimmed;
+            }
+        });
+
+        // Bloquea teclas extra si ya llegó al límite
+        textarea.addEventListener('keydown', function(e) {
+            const words = this.value.trim().split(/\s+/);
+            const allowedKeys = ['Backspace', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Delete', 'Tab'];
+            if (words.length >= maxWords && !allowedKeys.includes(e.key)) {
+                const selection = window.getSelection();
+                if (!selection || selection.toString().length === 0) {
+                    e.preventDefault();
+                }
+            }
+        });
 </script>
 
 
