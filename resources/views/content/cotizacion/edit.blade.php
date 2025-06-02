@@ -596,6 +596,7 @@ $modulosOptions .= '<option value="'.$modulo->id.'" data-precio="'.$modulo->prec
         doc.save(`cotizacion-${codigo}.pdf`);
     });
 </script>
+
 <script>
     $(document).ready(function() {
         $('#cotizacionForm').submit(function(e) {
