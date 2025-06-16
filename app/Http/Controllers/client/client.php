@@ -86,9 +86,16 @@ class Client extends Controller
           $q->where('nombre', 'like', "%{$search}%")
             ->orWhere('empresa', 'like', "%{$search}%")
             ->orWhere('telefono', 'like', "%{$search}%")
-            ->orWhere('correo', 'like', "%{$search}%");
+            ->orWhere('correo', 'like', "%{$search}%")
+            ->orWhere('servicios', 'like', "%{$search}%")
+            ->orWhere('status', 'like', "%{$search}%")
+            ->orWhereHas('evento', function ($e) use ($search) {
+              $e->where('title', 'like', "%{$search}%");
+            });
         });
       }
+      
+      
 
       $filtered = $query->count();
 

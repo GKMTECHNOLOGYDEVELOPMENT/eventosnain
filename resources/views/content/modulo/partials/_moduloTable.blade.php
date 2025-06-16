@@ -14,7 +14,9 @@
             {{ $modulo->stock_total }}
             @endif
     </td>
-    <td>{{ \Carbon\Carbon::parse($modulo->fecha_registro)->format('d/m/Y') }}</td>
+    <td>{{ \Carbon\Carbon::parse($modulo->fecha_registro)->format('Y-m-d') }}</td>
+
+
     <td>
         @if($modulo->estado)
         <span class="badge bg-success">Activo</span>
