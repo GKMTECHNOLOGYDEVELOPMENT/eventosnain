@@ -78,9 +78,9 @@
                             </label>
                             <select id="selectEvento" class="form-select select2 border-primary" style="width: 100%;">
                                 <option value="">Seleccione un evento</option>
-                                <option value="1">Evento A</option>
-                                <option value="2">Evento B</option>
-                                <option value="3">Evento C</option>
+                                @foreach($eventos as $evento)
+                                <option value="{{ $evento->id }}">{{ $evento->title }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -117,7 +117,7 @@
                                 <i class="fas fa-user-times"></i>
                             </div>
                             <strong>Clientes en Riesgo</strong>
-                            <span class="text-muted small">Sin ningún contacto</span>
+                            <span class="text-muted small" data-metric="clientes-riesgo">0</span>
                         </div>
                     </div>
 
@@ -130,7 +130,7 @@
                                 <i class="fas fa-clock"></i>
                             </div>
                             <strong>Promedio desde Registro</strong>
-                            <span class="text-muted small">Ej: 14 días</span>
+                            <span class="text-muted small" data-metric="promedio-dias">N/A</span>
                         </div>
                     </div>
 
@@ -143,7 +143,7 @@
                                 <i class="fas fa-hourglass-half"></i>
                             </div>
                             <strong>Proceso Estancado</strong>
-                            <span class="text-muted small">> 15 días sin interacción</span>
+                            <span class="text-muted small" data-metric="proceso-estancado">0</span>
                         </div>
                     </div>
 
@@ -156,7 +156,7 @@
                                 <i class="fas fa-check-circle"></i>
                             </div>
                             <strong>Interacción Completa</strong>
-                            <span class="text-muted small">Con todos los canales</span>
+                            <span class="text-muted small" data-metric="interaccion-completa">0</span>
                         </div>
                     </div>
                 </div>
@@ -200,24 +200,34 @@
             </div>
         </div>
 
+<!-- Line Chart: Promedio por Cotización -->
+<div class="card mt-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="card-title mb-0 text-primary">
+                <i class="fas fa-chart-line me-2"></i> Promedio por Cotización (Mensual)
+            </h5>
 
-        <!-- Line Chart: Promedio por Cotización -->
-        <div class="card mt-4">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h5 class="card-title mb-0 text-primary">
-                        <i class="fas fa-chart-line me-2"></i> Promedio por Cotización (Mensual)
-                    </h5>
-
-                    <select id="anio-promedio" class="form-select w-auto">
-                        <option value="2025" selected>2025</option>
-                        <option value="2024">2024</option>
-                        <option value="2023">2023</option>
-                    </select>
+            <div class="d-flex align-items-center">
+                <!-- Toggle General/Evento -->
+                <div class="form-check form-switch me-3">
+                    <input class="form-check-input" type="checkbox" id="toggle-scope">
+                    <label class="form-check-label small" for="toggle-scope">
+                        <span id="scope-label">General</span>
+                    </label>
                 </div>
-                <div id="chart-promedio-cotizaciones" style="height: 350px;"></div>
+                
+                <!-- Selector de año -->
+                <select id="anio-promedio" class="form-select form-select-sm w-auto">
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                </select>
             </div>
         </div>
+        <div id="chart-promedio-cotizaciones" style="height: 350px;"></div>
+    </div>
+</div>
 
         <div class="card mt-3 mb-3 shadow-sm border">
             <div class="card-body py-2 px-3">
