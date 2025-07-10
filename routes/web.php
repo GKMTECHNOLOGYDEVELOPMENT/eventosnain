@@ -20,7 +20,7 @@ use App\Http\Controllers\Calendario\Calendario;
 use App\Http\Controllers\cards\CardBasic;
 use App\Http\Controllers\condiciones\CondicionesController;
 use App\Http\Controllers\cotizaciones\CotizacionController;
-use App\Http\Controllers\dashboard\Usuario;
+
 use App\Http\Controllers\user_interface\Accordion;
 use App\Http\Controllers\user_interface\Alerts;
 use App\Http\Controllers\user_interface\Badges;
@@ -56,7 +56,6 @@ use App\Models\CondicionComercial;
 
 
 Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics')->middleware('auth');
-Route::get('/usuario', [Usuario::class, 'index'])->name('dashboard-usuario')->middleware('auth');
 
 
 //Client
@@ -70,6 +69,7 @@ Route::get('/cliente/{id}/notification', [Client::class, 'notification'])->name(
 Route::get('/cliente/{id}/connections', [Client::class, 'connections'])->name('client.connections');
 Route::get('/cliente/{id}', [Client::class, 'status'])->name('client.status')->middleware('auth');
 Route::get('/clientes', [client::class, 'index'])->name('clientes.index')->middleware('auth');
+Route::get('/cliente/exportar', [Client::class, 'exportarExcel'])->name('client.exportar');
 
 //proceso
 Route::get('/cliente/{id}/proceso', [Client::class, 'proceso'])->name('client.proceso')->middleware('auth');

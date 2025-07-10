@@ -9,10 +9,16 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Listado de Clientes</h5>
-            <a href="{{ route('client-newClient') }}" class="btn btn-primary">
-                <i class="bx bx-plus me-1"></i> Nuevo Cliente
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('client-newClient') }}" class="btn btn-primary">
+                    <i class="bx bx-plus me-1"></i> Nuevo Cliente
+                </a>
+                <a href="#" id="btnExportar" class="btn btn-success">
+                    <i class="bx bx-file"></i> Exportar Excel
+                </a>
+            </div>
         </div>
+
 
         <div class="card-body">
             @if (session('error'))
@@ -27,6 +33,21 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-secondary">Filtrar por Servicio</label>
+                    <select id="servicioFilter" class="form-select w-100">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-secondary">Filtrar por Evento</label>
+                    <select id="eventoFilter" class="form-select w-100">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+            </div>
+
 
             <!-- Tabla de clientes -->
             <div class="table-responsive">
@@ -116,10 +137,46 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#client-table').DataTable({
+            // 🔄 Cargar servicios desde el backend
+            $.get('{{ route('api.client.servicios') }}', function(data) {
+                const $select = $('#servicioFilter');
+                data.forEach(function(servicio) {
+                    $select.append(new Option(servicio, servicio));
+                });
+
+                // Inicializa Select2 una vez cargado
+                $select.select2({
+                    placeholder: 'Selecciona un servicio',
+                    allowClear: true,
+                    width: 'resolve'
+                });
+            });
+            // Filtro de eventos
+            $.get('{{ route('api.client.eventos') }}', function(data) {
+                const $eventoSelect = $('#eventoFilter');
+                data.forEach(function(evento) {
+                    $eventoSelect.append(new Option(evento.title, evento.id));
+                });
+                $eventoSelect.select2({
+                    placeholder: 'Selecciona un evento',
+                    allowClear: true,
+                    width: 'resolve'
+                });
+            });
+
+
+            // 🔄 Inicializa DataTable con filtro por servicio
+            let table = $('#client-table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: '{{ route('api.clientes') }}',
+                ajax: {
+                    url: '{{ route('api.clientes') }}',
+                    data: function(d) {
+                        d.servicio = $('#servicioFilter').val();
+                        d.evento_id = $('#eventoFilter').val();
+                    }
+
+                },
                 columns: [{
                         data: 'DT_RowIndex',
                         orderable: false,
@@ -180,42 +237,26 @@
                     }
                 }
             });
+
+            // 🔁 Actualiza la tabla al cambiar servicio
+            $('#servicioFilter').on('change', function() {
+                table.ajax.reload();
+            });
+            $('#eventoFilter').on('change', function() {
+                table.ajax.reload();
+            });
+
+        });
+
+        $('#btnExportar').on('click', function(e) {
+            e.preventDefault();
+
+            const servicio = $('#servicioFilter').val() || '';
+            const evento_id = $('#eventoFilter').val() || '';
+
+            const url =
+                `{{ route('client.exportar') }}?servicio=${encodeURIComponent(servicio)}&evento_id=${evento_id}`;
+            window.location.href = url;
         });
     </script>
 @endpush
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Inicializar los campos y listeners para cada select con clase .form-select
-        document.querySelectorAll('.form-select').forEach(function(selectElement) {
-            var clienteId = selectElement.getAttribute('data-client-id');
-
-            // Función para actualizar los campos (asegúrate de que esta func esté definida)
-            updateFields(clienteId);
-
-            selectElement.addEventListener('change', function() {
-                updateFields(clienteId);
-            });
-
-            // Manejo del campo de reunión asociado a este cliente
-            var reunionSelect = document.getElementById('reunion' + clienteId);
-            var reunionFields = document.getElementById('reunion-fields' + clienteId);
-
-            if (reunionSelect && reunionFields) {
-                function handleReunionChange() {
-                    if (reunionSelect.value === 'SI') {
-                        reunionFields.style.display = 'block';
-                    } else {
-                        reunionFields.style.display = 'none';
-                    }
-                }
-
-                // Inicializar el estado del campo de reunión
-                handleReunionChange();
-
-                // Listener para el cambio de valor del select de reunión
-                reunionSelect.addEventListener('change', handleReunionChange);
-            }
-        });
-    });
-</script>
