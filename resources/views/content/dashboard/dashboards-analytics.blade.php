@@ -22,6 +22,15 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts-liquidfill/dist/echarts-liquidfill.min.js"></script>
     <script src="{{ asset('assets/js/dashboard-kpis.js') }}"></script>
+    <script src="{{ asset('assets/js/eventos.js') }}"></script>
+    <script src="{{ asset('assets/js/modalsmetricas.js') }}"></script>
+    <script src="{{ asset('assets/js/vendedoreskpis.js') }}"></script>
+    <script src="{{ asset('assets/js/canales-contacto.js') }}"></script>
+    <script src="{{ asset('assets/js/cotizaciones.js') }}"></script>
+    <script src="{{ asset('assets/js/semanal.js') }}"></script>
+
+        
+
 @endpush
 
 

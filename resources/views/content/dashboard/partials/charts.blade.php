@@ -62,7 +62,31 @@
 
 <div class="card mt-4">
     <div class="card-body">
-        <h5 class="card-title mb-4">Canales de Contacto Más Usados</h5>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="card-title mb-0 text-primary">
+                <i class="fas fa-comments me-2"></i> Canales de Contacto Más Usados
+            </h5>
+            
+            <!-- Toggle para cambiar entre general/evento -->
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="toggle-scope">
+                <label class="form-check-label" for="toggle-scope">
+                    <span id="scope-label" class="text-muted">Vista General</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Estado de carga -->
+        <div id="loading-canales" class="text-center d-none mb-3">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+
+        <!-- Mensaje de error -->
+        <div id="error-canales" class="alert alert-danger d-none" role="alert">
+            Error cargando datos. Intentando reconectar...
+        </div>
 
         <div class="row text-center">
             <!-- Llamada -->
@@ -73,7 +97,7 @@
                         <i class="fas fa-phone-alt"></i>
                     </div>
                     <strong>Llamadas</strong>
-                    <span class="text-muted small">58% de interacciones</span>
+                    <span class="text-muted small" data-canal="llamadas" data-bs-toggle="tooltip">0% de interacciones</span>
                 </div>
             </div>
 
@@ -85,7 +109,7 @@
                         <i class="fab fa-whatsapp"></i>
                     </div>
                     <strong>WhatsApp</strong>
-                    <span class="text-muted small">30% de interacciones</span>
+                    <span class="text-muted small" data-canal="whatsapp" data-bs-toggle="tooltip">0% de interacciones</span>
                 </div>
             </div>
 
@@ -97,9 +121,16 @@
                         <i class="fas fa-envelope"></i>
                     </div>
                     <strong>Correo Electrónico</strong>
-                    <span class="text-muted small">12% de interacciones</span>
+                    <span class="text-muted small" data-canal="correos" data-bs-toggle="tooltip">0% de interacciones</span>
                 </div>
             </div>
+        </div>
+
+        <!-- Info del scope actual -->
+        <div class="mt-3 text-center">
+            <small class="text-muted" id="scope-info">
+                Mostrando datos <strong>de todos los eventos</strong>
+            </small>
         </div>
     </div>
 </div>
@@ -121,9 +152,19 @@
 <!-- Estado de Cotizaciones -->
 <div class="card mt-4">
     <div class="card-body">
-        <h5 class="card-title mb-3 text-primary">
-            <i class="fas fa-balance-scale me-2"></i> Estado de Cotizaciones
-        </h5>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0 text-primary">
+                <i class="fas fa-balance-scale me-2"></i> Estado de Cotizaciones
+            </h5>
+            
+            <!-- Toggle General/Evento -->
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="toggle-scope-estados">
+                <label class="form-check-label small" for="toggle-scope-estados">
+                    <span id="scope-label-estados">General</span>
+                </label>
+            </div>
+        </div>
         <div id="estado-cotizaciones-chart" style="height: 320px;"></div>
     </div>
 </div>
