@@ -23,4 +23,3 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('/cliente', [Client::class, 'getAll']);
 Route::get('/api/modulos', [ModuloController::class, 'getModulos'])->name('api.modulos');
-Route::get('/clientes', [Client::class, 'getClientes'])->name('api.clientes');

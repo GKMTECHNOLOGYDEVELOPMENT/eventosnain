@@ -112,7 +112,7 @@ Route::post('/client/{id}/upload-photo', [client::class, 'uploadPhoto'])->name('
 
 // routes/web.php
 
-Route::put('clients/{id}/updateStatus', [client::class, 'updateStatus'])->name('client.updateStatus')->middleware('auth');
+Route::put('clients/{id}/updateStatus', [client::class, 'updateStatus'])->name('client.updateStatus');
 
 
 
@@ -390,3 +390,4 @@ Route::post('/salida/eliminar', [client::class, 'eliminarSalida'])->name('salida
 
 // routes/web.php
 Route::post('/salida_user/guardar', [client::class, 'guardar'])->name('salida_user.guardar');
+Route::get('/clientes', [Client::class, 'getClientes'])->name('api.clientes')->middleware('auth');

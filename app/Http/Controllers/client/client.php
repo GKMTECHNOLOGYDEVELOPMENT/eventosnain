@@ -58,26 +58,48 @@ class Client extends Controller
     return view('content.client.client-clientList', compact('clientes', 'usuarios', 'reuniones', 'observaciones'));
   }
 
-  public function getClientes(Request $request)
-  {
-    try {
-      $columns = [
-        'id',
-        'nombre',
-        'empresa',
-        'telefono',
-        'servicios',
-        'status',
-        'events_id',
-        'correo',
-        'whatsapp',
-        'llamada',
-        'reunion'
-      ];
 
-      // Cargar relación con el evento
-      $query = Cliente::with('evento');
-      $total = Cliente::count();
+  private function calcularStatus($cliente)
+{
+    $correo = $cliente->correo;
+    $whatsapp = $cliente->whatsapp;
+    $llamada = $cliente->llamada;
+    $reunion = $cliente->reunion;
+
+    // === Lógica resumida (debes adaptarla a tu lógica larga) ===
+    if ($correo === 'SI' && $whatsapp === 'SI' && $llamada === 'SI' && $reunion === 'SI') {
+        return ['status' => 'Atendido', 'badge' => 'success'];
+    }
+
+    if ($correo === 'NO' && $whatsapp === 'NO' && $llamada === 'NO' && $reunion === 'NO') {
+        return ['status' => 'Pendiente', 'badge' => 'danger'];
+    }
+
+    return ['status' => 'En Proceso', 'badge' => 'warning'];
+}
+
+
+
+public function getClientes(Request $request)
+{
+    try {
+        $columns = [
+            'id',
+            'nombre',
+            'empresa',
+            'telefono',
+            'servicios',
+            'status',
+            'events_id',
+            'correo',
+            'whatsapp',
+            'llamada',
+            'reunion'
+        ];
+
+        // Relación con evento
+        $query = Cliente::with('evento');
+        $total = Cliente::count();
 
       // Filtro de búsqueda
       if (!empty($request->search['value'])) {
@@ -86,68 +108,71 @@ class Client extends Controller
           $q->where('nombre', 'like', "%{$search}%")
             ->orWhere('empresa', 'like', "%{$search}%")
             ->orWhere('telefono', 'like', "%{$search}%")
-            ->orWhere('correo', 'like', "%{$search}%");
+            ->orWhere('correo', 'like', "%{$search}%")
+            ->orWhere('servicios', 'like', "%{$search}%")
+            ->orWhere('status', 'like', "%{$search}%")
+            ->orWhereHas('evento', function ($e) use ($search) {
+              $e->where('title', 'like', "%{$search}%");
+            });
         });
       }
 
-      $filtered = $query->count();
+        $filtered = $query->count();
 
-      // Obtener los datos paginados y ordenados
-      $clientes = $query
-        ->offset($request->start)
-        ->limit($request->length)
-        ->orderBy($columns[$request->order[0]['column']] ?? 'id', $request->order[0]['dir'] ?? 'desc')
-        ->get();
+        // Obtener los datos paginados y ordenados
+        $clientes = $query
+            ->offset($request->start)
+            ->limit($request->length)
+            ->orderBy($columns[$request->order[0]['column']] ?? 'id', $request->order[0]['dir'] ?? 'desc')
+            ->get();
 
-      $data = [];
-      foreach ($clientes as $i => $c) {
-        $modalId = "statusModal" . $c->id;
+        // Datos adicionales para los modales
+        $usuarios = User::all();
+        $observaciones = Observacion::all()->keyBy('id_cliente');
+        $reuniones = Reunion::all()->groupBy('cliente_id');
 
-        $botonModal = '<button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal"
-                    data-bs-target="#' . $modalId . '" title="Actualizar estado">
-                    <i class="fas fa-info-circle"></i>
-                </button>';
+        $data = [];
+ foreach ($clientes as $i => $c) {
+    $statusData = $this->calcularStatus($c); // 👈 Aquí
 
-        $modal = view('content.client.modal.modal-estado', ['cliente' => $c])->render();
+    $accionesHtml = view('content.client.modal.todos-los-modales', [
+        'cliente' => $c,
+        'usuarios' => $usuarios,
+        'reuniones' => $reuniones,
+        'observaciones' => $observaciones,
+    ])->render();
 
-        $data[] = [
-          'DT_RowIndex' => $request->start + $i + 1,
-          'nombre' => $c->nombre,
-          'empresa' => $c->empresa,
-          'telefono' => $c->telefono,
-          'servicios' => $c->servicios,
-          'status' => '<span class="badge bg-' . ($c->status == 'Activo' ? 'success' : 'secondary') . '">' . $c->status . '</span>',
-          'events_id' => $c->evento->title ?? '—',
-          'correo' => $c->correo,
-          'whatsapp' => $c->whatsapp,
-          'llamada' => $c->llamada,
-          'reunion' => $c->reunion,
-          'acciones' => '
-            <div class="action-btns">
-                <a href="' . route('client.edit', $c->id) . '" class="btn btn-warning"><i class="bx bx-edit"></i></a>
-                <button class="btn btn-danger delete-cliente" data-id="' . $c->id . '"><i class="bx bx-trash"></i></button>
-            </div>
-            ' . $modal,
-        ];
-      }
+    $data[] = [
+        'DT_RowIndex' => $request->start + $i + 1,
+        'nombre' => $c->nombre,
+        'empresa' => $c->empresa,
+        'telefono' => $c->telefono,
+        'servicios' => $c->servicios,
+        'status' => '<span class="badge bg-' . $statusData['badge'] . '">' . $statusData['status'] . '</span>',
+        'events_id' => $c->evento->title ?? '—',
+        'correo' => $c->correo,
+        'whatsapp' => $c->whatsapp,
+        'llamada' => $c->llamada,
+        'reunion' => $c->reunion,
+        'acciones' => $accionesHtml,
+    ];
+}
 
-
-      return response()->json([
-        'draw' => intval($request->draw),
-        'recordsTotal' => $total,
-        'recordsFiltered' => $filtered,
-        'data' => $data,
-      ]);
+        return response()->json([
+            'draw' => intval($request->draw),
+            'recordsTotal' => $total,
+            'recordsFiltered' => $filtered,
+            'data' => $data,
+        ]);
     } catch (\Throwable $e) {
-      return response()->json([
-        'success' => false,
-        'message' => $e->getMessage(),
-        'line' => $e->getLine(),
-        'file' => $e->getFile()
-      ], 500);
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+            'line' => $e->getLine(),
+            'file' => $e->getFile()
+        ], 500);
     }
-  }
-
+}
 
 
   public function reunion()
@@ -889,10 +914,7 @@ class Client extends Controller
     $userId = auth()->id();
 
     // Obtener eventos a los que el usuario está asignado
-    $events = Salida::whereHas('users', function ($query) use ($userId) {
-      $query->where('user_id', $userId);
-    })->get();
-
+    $events = Salida::all();
     // $events = salida::all();
 
     // Mostrar el formulario para crear un nuevo cliente
@@ -1104,77 +1126,105 @@ class Client extends Controller
 
 
 
-  public function updateStatus(Request $request, $id)
-  {
-    try {
-      $request->validate([
-        'whatsapp' => 'required|in:SI,NO,PENDIENTE',
-        'correo' => 'required|in:SI,NO,PENDIENTE',
-        'reunion' => 'required|in:SI,NO,PENDIENTE',
-        'observaciones_reunion' => 'nullable|string',
-        'fechareunion' => 'nullable|date',
-        'llamada' => 'required|in:SI,NO,PENDIENTE',
-        'observaciones_llamada' => 'nullable|string',
-        'fechallamada' => 'nullable|date',
-      ]);
+ public function updateStatus(Request $request, $id)
+{
+  try {
+    Log::debug('Iniciando updateStatus', ['id' => $id, 'request_data' => $request->all()]);
 
-      $cliente = Cliente::findOrFail($id);
+    $request->validate([
+      'whatsapp' => 'required|in:SI,NO,PENDIENTE',
+      'correo' => 'required|in:SI,NO,PENDIENTE',
+      'reunion' => 'required|in:SI,NO,PENDIENTE',
+      'observaciones_reunion' => 'nullable|string',
+      'fechareunion' => 'nullable|date',
+      'llamada' => 'required|in:SI,NO,PENDIENTE',
+      'observaciones_llamada' => 'nullable|string',
+      'fechallamada' => 'nullable|date',
+    ]);
 
-      $whatsapp = $request->input('whatsapp');
-      $correo = $request->input('correo');
-      $reunion = $request->input('reunion');
-      $observaciones_reunion = $request->input('observaciones_reunion') ?: '';
-      $fechareunion = $request->input('fechareunion');
-      $llamada = $request->input('llamada');
-      $observaciones_llamada = $request->input('observaciones_llamada');
-      $fechallamada = $request->input('fechallamada');
+    $cliente = Cliente::findOrFail($id);
+    Log::debug('Cliente encontrado', ['cliente' => $cliente]);
 
-      $cliente->update([
-        'whatsapp' => $whatsapp,
-        'correo' => $correo,
-        'reunion' => $reunion,
-        'llamada' => $llamada,
-      ]);
+    $whatsapp = $request->input('whatsapp');
+    $correo = $request->input('correo');
+    $reunion = $request->input('reunion');
+    $observaciones_reunion = $request->input('observaciones_reunion') ?: '';
+    $fechareunion = $request->input('fechareunion');
+    $llamada = $request->input('llamada');
+    $observaciones_llamada = $request->input('observaciones_llamada');
+    $fechallamada = $request->input('fechallamada');
 
-      $siCount = collect([$whatsapp, $correo, $reunion, $llamada])->filter(fn($v) => $v === 'SI')->count();
-      $noCount = collect([$whatsapp, $correo, $reunion, $llamada])->filter(fn($v) => $v === 'NO')->count();
+    Log::debug('Valores recibidos', [
+      'whatsapp' => $whatsapp,
+      'correo' => $correo,
+      'reunion' => $reunion,
+      'llamada' => $llamada,
+      'observaciones_reunion' => $observaciones_reunion,
+      'fechareunion' => $fechareunion,
+      'observaciones_llamada' => $observaciones_llamada,
+      'fechallamada' => $fechallamada,
+    ]);
 
-      if ($siCount == 4) {
-        $status = 'Atendido';
-      } elseif ($noCount >= 3) {
-        $status = 'Pendiente';
-      } else {
-        $status = 'En Proceso';
-      }
+    $cliente->update([
+      'whatsapp' => $whatsapp,
+      'correo' => $correo,
+      'reunion' => $reunion,
+      'llamada' => $llamada,
+    ]);
 
-      $cliente->status = $status;
-      $cliente->save();
+    Log::debug('Cliente actualizado', ['cliente_id' => $cliente->id]);
 
-      Observacion::updateOrCreate(
-        ['id_cliente' => $id],
-        [
-          'observacionreunion' => $observaciones_reunion,
-          'fechareunion' => $fechareunion ?: now()->toDateString(),
-          'observacionllamada' => $observaciones_llamada,
-          'fechallamada' => $fechallamada ?: now()->toDateString(),
-        ]
-      );
+    $siCount = collect([$whatsapp, $correo, $reunion, $llamada])->filter(fn($v) => $v === 'SI')->count();
+    $noCount = collect([$whatsapp, $correo, $reunion, $llamada])->filter(fn($v) => $v === 'NO')->count();
 
-      return response()->json([
-        'success' => true,
-        'message' => 'Cliente actualizado con éxito.',
-        'cliente_id' => $cliente->id,
-        'status' => $status
-      ]);
-    } catch (\Throwable $e) {
-      return response()->json([
-        'success' => false,
-        'message' => 'Ocurrió un error al actualizar.',
-        'error' => $e->getMessage(),
-        'line' => $e->getLine()
-      ], 500);
+    Log::debug('Conteo de respuestas', ['SI' => $siCount, 'NO' => $noCount]);
+
+    if ($siCount == 4) {
+      $status = 'Atendido';
+    } elseif ($noCount >= 3) {
+      $status = 'Pendiente';
+    } else {
+      $status = 'En Proceso';
     }
+
+    $cliente->status = $status;
+    $cliente->save();
+
+    Log::debug('Status actualizado', ['cliente_id' => $cliente->id, 'nuevo_status' => $status]);
+
+    Observacion::updateOrCreate(
+      ['id_cliente' => $id],
+      [
+        'observacionreunion' => $observaciones_reunion,
+        'fechareunion' => $fechareunion ?: now()->toDateString(),
+        'observacionllamada' => $observaciones_llamada,
+        'fechallamada' => $fechallamada ?: now()->toDateString(),
+      ]
+    );
+
+    Log::debug('Observación guardada/actualizada', ['id_cliente' => $id]);
+
+    return response()->json([
+      'success' => true,
+      'message' => 'Cliente actualizado con éxito.',
+      'cliente_id' => $cliente->id,
+      'status' => $status
+    ]);
+  } catch (\Throwable $e) {
+    Log::error('Error en updateStatus', [
+      'message' => $e->getMessage(),
+      'line' => $e->getLine(),
+      'trace' => $e->getTraceAsString()
+    ]);
+
+    return response()->json([
+      'success' => false,
+      'message' => 'Ocurrió un error al actualizar.',
+      'error' => $e->getMessage(),
+      'line' => $e->getLine()
+    ], 500);
   }
+}
 
 
 

@@ -461,7 +461,7 @@ $usuarios = User::whereIn('id', $usuariosMeta->keys())->get()->keyBy('id');
       // Obtener el dinero total por evento
       $dineroPorEvento = DB::table('cotizaciones')
         ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-        ->select('cliente.events_id as evento_id', DB::raw('SUM(cotizaciones.money) as total_money'))
+        ->select('cliente.events_id as evento_id', DB::raw('SUM(cotizaciones.total_con_igv) as total_money'))
         ->groupBy('cliente.events_id')
         ->get();
 
