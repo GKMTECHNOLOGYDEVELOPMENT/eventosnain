@@ -116,6 +116,8 @@ public function getClientes(Request $request)
             });
         });
       }
+      
+      
 
         $filtered = $query->count();
 

@@ -3,7 +3,7 @@
 @php
 /* Display elements */
 $contentNavbar = true;
-$containerNav = ($containerNav ?? 'container-xxl');
+$container = ($container ?? 'container-fluid'); // ✅ Usa full width
 $isNavbar = ($isNavbar ?? true);
 $isMenu = ($isMenu ?? true);
 $isFlex = ($isFlex ?? false);
@@ -11,11 +11,8 @@ $isFooter = ($isFooter ?? true);
 
 /* HTML Classes */
 $navbarDetached = 'navbar-detached';
-
-/* Content classes */
-$container = ($container ?? 'container-xxl');
-
 @endphp
+
 
 @section('layoutContent')
 

@@ -70,8 +70,14 @@ class ModuloController extends Controller
           $q->where('codigo_modulo', 'like', "%{$search}%")
             ->orWhere('marca', 'like', "%{$search}%")
             ->orWhere('modelo', 'like', "%{$search}%")
-            ->orWhere('descripcion', 'like', "%{$search}%");
+            ->orWhere('descripcion', 'like', "%{$search}%")
+            ->orWhereRaw("CAST(precio_compra AS CHAR) LIKE ?", ["%{$search}%"])
+            ->orWhereRaw("CAST(precio_venta AS CHAR) LIKE ?", ["%{$search}%"])
+            ->orWhereRaw("CAST(stock_total AS CHAR) LIKE ?", ["%{$search}%"])
+            ->orWhereRaw("DATE_FORMAT(fecha_registro, '%d/%m/%Y') LIKE ?", ["%{$search}%"])
+            ->orWhereRaw("IF(estado = 1, 'Activo', 'Inactivo') LIKE ?", ["%{$search}%"]);
         });
+        
       }
 
       $totalFiltered = $query->count();
@@ -92,7 +98,7 @@ class ModuloController extends Controller
           'precio_compra'   => '$' . number_format($modulo->precio_compra, 2),
           'precio_venta'    => '$' . number_format($modulo->precio_venta, 2),
           'stock_total'     => $modulo->stock_total,
-          'fecha_registro'  => $modulo->fecha_registro,
+          'fecha_registro' => optional($modulo->fecha_registro)->format('d/m/Y'),
           'estado'          => $modulo->estado ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-danger">Inactivo</span>',
           'acciones'        => '
             <div class="btn-group">

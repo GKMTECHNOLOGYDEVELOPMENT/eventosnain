@@ -162,7 +162,7 @@
             </div>
         </div>
     </main>
-    <footer style="page-break-inside: avoid; width: 100%; padding-top: 0px;">
+    <footer style="page-break-inside: avoid; width: 100%; padding-top: 140px;">
         <!-- NUESTRAS CUENTAS BANCARIAS justo debajo -->
         <div class="w-full px-4 uppercase font-bold text-black text-xs">
             NUESTRAS CUENTAS BANCARIAS
