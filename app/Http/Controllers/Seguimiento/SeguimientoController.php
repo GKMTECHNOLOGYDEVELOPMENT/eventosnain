@@ -1,21 +1,20 @@
 <?php
 
-namespace App\Http\Controllers\dashboard;
+namespace App\Http\Controllers\Seguimiento;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
-class Analytics extends Controller
+class SeguimientoController extends Controller
 {
-
     public function index()
     {
+
         $eventos = DB::table('salida')
             ->select('id', 'title')
             ->orderBy('start', 'desc')
             ->get();
-
-        return view('content.dashboard.dashboards-analytics', compact('eventos'));
+        return view('content.dashboard.seguimiento-analytics');
     }
-
 }

@@ -20,7 +20,7 @@ use App\Http\Controllers\Calendario\Calendario;
 use App\Http\Controllers\cards\CardBasic;
 use App\Http\Controllers\condiciones\CondicionesController;
 use App\Http\Controllers\cotizaciones\CotizacionController;
-
+use App\Http\Controllers\Seguimiento\SeguimientoController;
 use App\Http\Controllers\user_interface\Accordion;
 use App\Http\Controllers\user_interface\Alerts;
 use App\Http\Controllers\user_interface\Badges;
@@ -59,6 +59,10 @@ use Illuminate\Support\Facades\Log;
 
 
 Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics')->middleware('auth');
+Route::get('/seguimiento', [SeguimientoController::class, 'index'])
+    ->name('seguimiento-analytics')
+    ->middleware('auth');
+
 
 
 //Client
@@ -397,9 +401,9 @@ Route::get('/clientes', [Client::class, 'getClientes'])->name('api.clientes')->m
 
 
 //evento 
-Route::get('/evento/{id}/datos', function($id) {
-      // Obtener fechas para mes actual y anterior
-     $now = now();
+Route::get('/evento/{id}/datos', function ($id) {
+    // Obtener fechas para mes actual y anterior
+    $now = now();
 
     // Usamos copy() para evitar modificar la misma instancia
     $mesActualInicio = $now->copy()->startOfMonth()->format('Y-m-d');
@@ -417,8 +421,8 @@ Route::get('/evento/{id}/datos', function($id) {
         'mesAnteriorFin' => $mesAnteriorFin
     ]);
     // Datos para cuando no hay ID (general)
-    if($id == 'general') {
-         $totalCotizaciones = DB::table('cotizaciones')->count();
+    if ($id == 'general') {
+        $totalCotizaciones = DB::table('cotizaciones')->count();
         $cotizacionesMesActual = DB::table('cotizaciones')
             ->whereBetween('fecha_emision', [$mesActualInicio, $mesActualFin])
             ->count();
@@ -426,7 +430,7 @@ Route::get('/evento/{id}/datos', function($id) {
             ->whereBetween('fecha_emision', [$mesAnteriorInicio, $mesAnteriorFin])
             ->count();
         return response()->json([
-             'cotizaciones_mes_actual' => $cotizacionesMesActual,
+            'cotizaciones_mes_actual' => $cotizacionesMesActual,
             'cotizaciones_mes_anterior' => $cotizacionesMesAnterior,
             'total_cotizaciones' => $totalCotizaciones,
             'porcentaje_mes_actual' => $totalCotizaciones > 0 ? ($cotizacionesMesActual / $totalCotizaciones) * 100 : 0,
@@ -439,31 +443,31 @@ Route::get('/evento/{id}/datos', function($id) {
                 ->sum('total_con_igv'),
             'total_clientes' => DB::table('cliente')->count(),
             'total_cotizaciones' => DB::table('cotizaciones')->count(),
-            'tasa_exito' => DB::table('cotizaciones')->where('estado', 'aprobada')->count() / 
-                            max(DB::table('cotizaciones')->count(), 1) * 100,
+            'tasa_exito' => DB::table('cotizaciones')->where('estado', 'aprobada')->count() /
+                max(DB::table('cotizaciones')->count(), 1) * 100,
             'cotizaciones_vencidas' => DB::table('cotizaciones')
-                                      ->where('estado', 'vencida')
-                                      ->count(),
+                ->where('estado', 'vencida')
+                ->count(),
             'meta_registros' => DB::table('salida')->sum('meta_registros')
 
-            
+
         ]);
     }
-    
+
     // Datos específicos del evento
     $evento = DB::table('salida')->select('meta_registros')->find($id);
-    
-     $totalCotizacionesEvento = DB::table('cotizaciones')
+
+    $totalCotizacionesEvento = DB::table('cotizaciones')
         ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
         ->where('cliente.events_id', $id)
         ->count();
-        
+
     $cotizacionesMesActualEvento = DB::table('cotizaciones')
         ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
         ->where('cliente.events_id', $id)
         ->whereBetween('cotizaciones.fecha_emision', [$mesActualInicio, $mesActualFin])
         ->count();
-        
+
     $cotizacionesMesAnteriorEvento = DB::table('cotizaciones')
         ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
         ->where('cliente.events_id', $id)
@@ -474,25 +478,25 @@ Route::get('/evento/{id}/datos', function($id) {
         'meta_registros' => $evento ? $evento->meta_registros : 0,
         'total_clientes' => DB::table('cliente')->where('events_id', $id)->count(),
         'total_cotizaciones' => DB::table('cotizaciones')
-                                ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-                                ->where('cliente.events_id', $id)
-                                ->count(),
+            ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
+            ->where('cliente.events_id', $id)
+            ->count(),
         'tasa_exito' => DB::table('cotizaciones')
-                        ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-                        ->where('cliente.events_id', $id)
-                        ->where('cotizaciones.estado', 'aprobada')
-                        ->count() / 
-                        max(DB::table('cotizaciones')
-                            ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-                            ->where('cliente.events_id', $id)
-                            ->count(), 1) * 100,
+            ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
+            ->where('cliente.events_id', $id)
+            ->where('cotizaciones.estado', 'aprobada')
+            ->count() /
+            max(DB::table('cotizaciones')
+                ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
+                ->where('cliente.events_id', $id)
+                ->count(), 1) * 100,
         'cotizaciones_vencidas' => DB::table('cotizaciones')
-                                  ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-                                  ->where('cliente.events_id', $id)
-                                  ->where('cotizaciones.estado', 'vencida')
-                                  ->count(),
+            ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
+            ->where('cliente.events_id', $id)
+            ->where('cotizaciones.estado', 'vencida')
+            ->count(),
 
-                                   'cotizaciones_mes_actual' => $cotizacionesMesActualEvento,
+        'cotizaciones_mes_actual' => $cotizacionesMesActualEvento,
         'cotizaciones_mes_anterior' => $cotizacionesMesAnteriorEvento,
         'total_cotizaciones' => $totalCotizacionesEvento,
         'porcentaje_mes_actual' => $totalCotizacionesEvento > 0 ? ($cotizacionesMesActualEvento / $totalCotizacionesEvento) * 100 : 0,
@@ -512,12 +516,12 @@ Route::get('/evento/{id}/datos', function($id) {
 
 
 // Rutas para métricas de seguimiento
-Route::get('/metricas-seguimiento/{eventoId}', function($eventoId) {
+Route::get('/metricas-seguimiento/{eventoId}', function ($eventoId) {
     $now = now();
-    
+
     // Clientes en riesgo (sin contacto)
     $clientesRiesgo = DB::table('cliente')
-        ->when($eventoId != 'general', function($query) use ($eventoId) {
+        ->when($eventoId != 'general', function ($query) use ($eventoId) {
             return $query->where('events_id', $eventoId);
         })
         ->whereNull('llamada')
@@ -529,7 +533,7 @@ Route::get('/metricas-seguimiento/{eventoId}', function($eventoId) {
 
     // Promedio días desde registro
     $promedioDias = DB::table('cliente')
-        ->when($eventoId != 'general', function($query) use ($eventoId) {
+        ->when($eventoId != 'general', function ($query) use ($eventoId) {
             return $query->where('events_id', $eventoId);
         })
         ->selectRaw('AVG(DATEDIFF(?, fecharegistro)) as promedio', [$now->format('Y-m-d')])
@@ -537,22 +541,22 @@ Route::get('/metricas-seguimiento/{eventoId}', function($eventoId) {
 
     // Proceso estancado (>15 días sin interacción)
     $procesoEstancado = DB::table('cliente')
-        ->when($eventoId != 'general', function($query) use ($eventoId) {
+        ->when($eventoId != 'general', function ($query) use ($eventoId) {
             return $query->where('events_id', $eventoId);
         })
         ->whereRaw('DATEDIFF(?, fecharegistro) > 15', [$now->format('Y-m-d')])
-        ->where(function($query) {
+        ->where(function ($query) {
             $query->whereNull('llamada')
-                  ->orWhereNull('whatsapp')
-                  ->orWhereNull('reunion')
-                  ->orWhereNull('contrato');
+                ->orWhereNull('whatsapp')
+                ->orWhereNull('reunion')
+                ->orWhereNull('contrato');
         })
         ->select('id', 'nombre', 'empresa', 'fecharegistro', 'llamada', 'whatsapp', 'reunion', 'contrato')
         ->get();
 
     // Interacción completa (todos los canales)
     $interaccionCompleta = DB::table('cliente')
-        ->when($eventoId != 'general', function($query) use ($eventoId) {
+        ->when($eventoId != 'general', function ($query) use ($eventoId) {
             return $query->where('events_id', $eventoId);
         })
         ->whereNotNull('llamada')
@@ -574,13 +578,13 @@ Route::get('/metricas-seguimiento/{eventoId}', function($eventoId) {
 });
 
 // Ruta para cargar detalles de clientes (usada en los modals)
-Route::get('/metricas-seguimiento-detalle/{tipo}/{eventoId}', function($tipo, $eventoId) {
+Route::get('/metricas-seguimiento-detalle/{tipo}/{eventoId}', function ($tipo, $eventoId) {
     $now = now();
-    
-    switch($tipo) {
+
+    switch ($tipo) {
         case 'riesgo':
             $clientes = DB::table('cliente')
-                ->when($eventoId != 'general', function($query) use ($eventoId) {
+                ->when($eventoId != 'general', function ($query) use ($eventoId) {
                     return $query->where('events_id', $eventoId);
                 })
                 ->whereNull('llamada')
@@ -590,26 +594,26 @@ Route::get('/metricas-seguimiento-detalle/{tipo}/{eventoId}', function($tipo, $e
                 ->select('id', 'nombre', 'empresa', 'email', 'telefono', 'fecharegistro')
                 ->get();
             break;
-            
+
         case 'estancado':
             $clientes = DB::table('cliente')
-                ->when($eventoId != 'general', function($query) use ($eventoId) {
+                ->when($eventoId != 'general', function ($query) use ($eventoId) {
                     return $query->where('events_id', $eventoId);
                 })
                 ->whereRaw('DATEDIFF(?, fecharegistro) > 15', [$now->format('Y-m-d')])
-                ->where(function($query) {
+                ->where(function ($query) {
                     $query->whereNull('llamada')
-                          ->orWhereNull('whatsapp')
-                          ->orWhereNull('reunion')
-                          ->orWhereNull('contrato');
+                        ->orWhereNull('whatsapp')
+                        ->orWhereNull('reunion')
+                        ->orWhereNull('contrato');
                 })
                 ->select('id', 'nombre', 'empresa', 'email', 'telefono', 'fecharegistro', 'llamada', 'whatsapp', 'reunion', 'contrato')
                 ->get();
             break;
-            
+
         case 'completa':
             $clientes = DB::table('cliente')
-                ->when($eventoId != 'general', function($query) use ($eventoId) {
+                ->when($eventoId != 'general', function ($query) use ($eventoId) {
                     return $query->where('events_id', $eventoId);
                 })
                 ->whereNotNull('llamada')
@@ -619,17 +623,17 @@ Route::get('/metricas-seguimiento-detalle/{tipo}/{eventoId}', function($tipo, $e
                 ->select('id', 'nombre', 'empresa', 'email', 'telefono', 'fecharegistro')
                 ->get();
             break;
-            
+
         default:
             return response()->json([], 404);
     }
-    
+
     return response()->json($clientes);
 });
 
 
 // Rutas para los tops de clientes y vendedores
-Route::get('/top-metricas/{eventoId}', function($eventoId) {
+Route::get('/top-metricas/{eventoId}', function ($eventoId) {
     // Obtener los últimos 5 meses
     $now = now();
     $meses = [];
@@ -643,7 +647,7 @@ Route::get('/top-metricas/{eventoId}', function($eventoId) {
     // Top 4 clientes con mayor monto cotizado
     $topClientes = DB::table('cotizaciones')
         ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-        ->when($eventoId != 'general', function($query) use ($eventoId) {
+        ->when($eventoId != 'general', function ($query) use ($eventoId) {
             return $query->where('cliente.events_id', $eventoId);
         })
         ->select(
@@ -666,12 +670,12 @@ Route::get('/top-metricas/{eventoId}', function($eventoId) {
             $monto = DB::table('cotizaciones')
                 ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
                 ->where('cliente.nombre', $cliente)
-                ->when($eventoId != 'general', function($query) use ($eventoId) {
+                ->when($eventoId != 'general', function ($query) use ($eventoId) {
                     return $query->where('cliente.events_id', $eventoId);
                 })
                 ->where(DB::raw("DATE_FORMAT(cotizaciones.fecha_emision, '%Y-%m')"), $mes)
                 ->sum('cotizaciones.total_con_igv');
-            
+
             $montosPorMes[] = $monto ? round($monto, 2) : 0;
         }
         $datosClientes[$cliente] = $montosPorMes;
@@ -680,9 +684,9 @@ Route::get('/top-metricas/{eventoId}', function($eventoId) {
     // Top 4 vendedores con más cotizaciones
     $topVendedores = DB::table('cotizaciones')
         ->join('users', 'cotizaciones.user_id', '=', 'users.id')
-        ->when($eventoId != 'general', function($query) use ($eventoId) {
+        ->when($eventoId != 'general', function ($query) use ($eventoId) {
             return $query->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-                        ->where('cliente.events_id', $eventoId);
+                ->where('cliente.events_id', $eventoId);
         })
         ->select(
             'users.name as vendedor_nombre',
@@ -702,14 +706,14 @@ Route::get('/top-metricas/{eventoId}', function($eventoId) {
         foreach ($meses as $mes) {
             $count = DB::table('cotizaciones')
                 ->join('users', 'cotizaciones.user_id', '=', 'users.id')
-                ->when($eventoId != 'general', function($query) use ($eventoId) {
+                ->when($eventoId != 'general', function ($query) use ($eventoId) {
                     return $query->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-                                ->where('cliente.events_id', $eventoId);
+                        ->where('cliente.events_id', $eventoId);
                 })
                 ->where('users.name', $vendedor)
                 ->where(DB::raw("DATE_FORMAT(cotizaciones.fecha_emision, '%Y-%m')"), $mes)
                 ->count();
-            
+
             $cotizacionesPorMes[] = $count;
         }
         $datosVendedores[$vendedor] = $cotizacionesPorMes;
@@ -726,24 +730,24 @@ Route::get('/top-metricas/{eventoId}', function($eventoId) {
 
 
 // Ruta para la tasa de seguimiento activo
-Route::get('/seguimiento-activo/{eventoId}', function($eventoId) {
+Route::get('/seguimiento-activo/{eventoId}', function ($eventoId) {
     // Total de clientes
     $totalClientes = DB::table('cliente')
-        ->when($eventoId != 'general', function($query) use ($eventoId) {
+        ->when($eventoId != 'general', function ($query) use ($eventoId) {
             return $query->where('events_id', $eventoId);
         })
         ->count();
 
     // Clientes con al menos una interacción
     $clientesConInteraccion = DB::table('cliente')
-        ->when($eventoId != 'general', function($query) use ($eventoId) {
+        ->when($eventoId != 'general', function ($query) use ($eventoId) {
             return $query->where('events_id', $eventoId);
         })
-        ->where(function($query) {
+        ->where(function ($query) {
             $query->whereNotNull('llamada')
-                  ->orWhereNotNull('whatsapp')
-                  ->orWhereNotNull('reunion')
-                  ->orWhereNotNull('contrato');
+                ->orWhereNotNull('whatsapp')
+                ->orWhereNotNull('reunion')
+                ->orWhereNotNull('contrato');
         })
         ->count();
 
@@ -759,16 +763,16 @@ Route::get('/seguimiento-activo/{eventoId}', function($eventoId) {
 });
 
 // Ruta para obtener clientes con interacción
-Route::get('/clientes-interaccion/{eventoId}', function($eventoId) {
+Route::get('/clientes-interaccion/{eventoId}', function ($eventoId) {
     $clientes = DB::table('cliente')
-        ->when($eventoId != 'general', function($query) use ($eventoId) {
+        ->when($eventoId != 'general', function ($query) use ($eventoId) {
             return $query->where('events_id', $eventoId);
         })
-        ->where(function($query) {
+        ->where(function ($query) {
             $query->whereNotNull('llamada')
-                  ->orWhereNotNull('whatsapp')
-                  ->orWhereNotNull('reunion')
-                  ->orWhereNotNull('contrato');
+                ->orWhereNotNull('whatsapp')
+                ->orWhereNotNull('reunion')
+                ->orWhereNotNull('contrato');
         })
         ->select('id', 'nombre', 'telefono', 'email', 'llamada', 'whatsapp', 'reunion', 'contrato')
         ->get();
@@ -777,7 +781,7 @@ Route::get('/clientes-interaccion/{eventoId}', function($eventoId) {
 });
 
 // Ruta para los canales de contacto (general y por evento)
-Route::get('/canales-contacto/{scope}/{eventoId?}', function($scope, $eventoId = null) {
+Route::get('/canales-contacto/{scope}/{eventoId?}', function ($scope, $eventoId = null) {
     // Validar el scope
     if (!in_array($scope, ['general', 'evento'])) {
         return response()->json(['error' => 'Scope inválido'], 400);
@@ -785,7 +789,7 @@ Route::get('/canales-contacto/{scope}/{eventoId?}', function($scope, $eventoId =
 
     // Base query para interacciones
     $query = DB::table('cliente');
-    
+
     // Filtrar por evento si es necesario
     if ($scope === 'evento' && $eventoId) {
         $query->where('events_id', $eventoId);
@@ -823,7 +827,7 @@ Route::get('/canales-contacto/{scope}/{eventoId?}', function($scope, $eventoId =
 
 
 // Ruta para el promedio de cotizaciones
-Route::get('/cotizaciones-promedio/{scope}/{eventoId?}', function($scope, $eventoId = null) {
+Route::get('/cotizaciones-promedio/{scope}/{eventoId?}', function ($scope, $eventoId = null) {
     // Validar scope
     if (!in_array($scope, ['general', 'evento'])) {
         return response()->json(['error' => 'Scope inválido'], 400);
@@ -831,10 +835,22 @@ Route::get('/cotizaciones-promedio/{scope}/{eventoId?}', function($scope, $event
 
     // Obtener año seleccionado (o actual por defecto)
     $anio = request()->input('anio', date('Y'));
-    
+
     $data = [];
-    $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-              'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    $meses = [
+        'Enero',
+        'Febrero',
+        'Marzo',
+        'Abril',
+        'Mayo',
+        'Junio',
+        'Julio',
+        'Agosto',
+        'Septiembre',
+        'Octubre',
+        'Noviembre',
+        'Diciembre'
+    ];
 
     // Consulta base
     $query = DB::table('cotizaciones')
@@ -846,7 +862,7 @@ Route::get('/cotizaciones-promedio/{scope}/{eventoId?}', function($scope, $event
     // Filtrar por evento si es necesario
     if ($scope === 'evento' && $eventoId) {
         $query->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-              ->where('cliente.events_id', $eventoId);
+            ->where('cliente.events_id', $eventoId);
     }
 
     $resultados = $query->get();
@@ -867,7 +883,7 @@ Route::get('/cotizaciones-promedio/{scope}/{eventoId?}', function($scope, $event
 });
 
 // Ruta para el estado de cotizaciones
-Route::get('/cotizaciones-estado/{scope}/{eventoId?}', function($scope, $eventoId = null) {
+Route::get('/cotizaciones-estado/{scope}/{eventoId?}', function ($scope, $eventoId = null) {
     // Validar scope
     if (!in_array($scope, ['general', 'evento'])) {
         return response()->json(['error' => 'Scope inválido'], 400);
@@ -880,7 +896,7 @@ Route::get('/cotizaciones-estado/{scope}/{eventoId?}', function($scope, $eventoI
     // Filtrar por evento si es necesario
     if ($scope === 'evento' && $eventoId) {
         $query->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-              ->where('cliente.events_id', $eventoId);
+            ->where('cliente.events_id', $eventoId);
     }
 
     $resultados = $query->groupBy('estado')->get();
@@ -912,7 +928,7 @@ Route::get('/cotizaciones-estado/{scope}/{eventoId?}', function($scope, $eventoI
 
 
 
-Route::get('/comparacion-semanal/{scope}/{eventoId?}', function($scope, $eventoId = null) {
+Route::get('/comparacion-semanal/{scope}/{eventoId?}', function ($scope, $eventoId = null) {
     // Validar scope
     if (!in_array($scope, ['general', 'evento'])) {
         return response()->json(['error' => 'Scope inválido'], 400);

@@ -14,7 +14,13 @@
           "url": "/",
           "name": "Análisis",
           "slug": "dashboard-analytics"
+        },
+        {
+          "url": "/seguimiento",
+          "name": "Seguimiento",
+          "slug": "seguimiento-analytics"
         }
+        
       ]
     },
     {
