@@ -3,78 +3,75 @@
 namespace App\Exports;
 
 use App\Models\Cliente;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithCustomStartCell;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ClientesExport implements FromCollection, WithMapping, WithHeadings, WithStyles, WithCustomStartCell
+class ClientesExport implements FromCollection, WithHeadings
 {
-    private $clientes;
+    protected $servicio;
+    protected $evento_id;
 
-    public function __construct($servicio = null, $evento_id = null)
+    public function __construct($servicio, $evento_id)
     {
-        $query = Cliente::with('evento');
-
-        if ($servicio) {
-            $query->where('servicios', 'like', '%' . $servicio . '%');
-        }
-
-        if ($evento_id) {
-            $query->where('events_id', $evento_id);
-        }
-
-        $this->clientes = $query->get();
+        $this->servicio = $servicio;
+        $this->evento_id = $evento_id;
     }
 
     public function collection()
     {
-        return $this->clientes;
-    }
+        Log::debug('[ClientesExport] Iniciando exportación con filtros', [
+            'servicio' => $this->servicio,
+            'evento_id' => $this->evento_id,
+        ]);
 
-    public function map($c): array
-    {
-        static $i = 1;
-        return [
-            $i++,
-            $c->nombre,
-            $c->empresa,
-            $c->telefono,
-            $c->servicios,
-            $c->evento->title ?? '—',
-            $c->correo,
-            $c->whatsapp,
-            $c->llamada,
-            $c->reunion,
-        ];
+        $query = Cliente::with('evento');
+
+        if (!empty($this->servicio)) {
+            $query->where('servicios', $this->servicio);
+        }
+
+        if (!empty($this->evento_id)) {
+            $query->where('events_id', $this->evento_id);
+        }
+
+        $clientes = $query->get();
+
+        Log::info('[ClientesExport] Clientes encontrados para exportar', [
+            'total' => $clientes->count()
+        ]);
+
+        return $clientes->map(function ($cliente) {
+            return [
+                $cliente->id,
+                $cliente->nombre,
+                $cliente->empresa,
+                $cliente->telefono,
+                $cliente->servicios,
+                $cliente->status,
+                optional($cliente->evento)->title ?? 'Sin evento',
+                $cliente->correo,
+                $cliente->whatsapp,
+                $cliente->llamada,
+                $cliente->reunion,
+            ];
+        });
     }
 
     public function headings(): array
     {
-        return ['#', 'Nombre', 'Empresa', 'Teléfono', 'Servicio', 'Evento', 'Correo', 'WhatsApp', 'Llamada', 'Reunión'];
-    }
-
-    public function startCell(): string
-    {
-        return 'A4';
-    }
-
-    public function styles(Worksheet $sheet): array
-    {
-        $sheet->mergeCells('A1:J1');
-        $sheet->setCellValue('A1', 'REPORTE DE CLIENTES');
-        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
-
-        $sheet->mergeCells('A2:J2');
-        $sheet->setCellValue('A2', 'Generado el: ' . now()->format('d/m/Y H:i'));
-        $sheet->getStyle('A2')->getAlignment()->setHorizontal('center');
-
-        $sheet->getStyle('A4:J4')->getFont()->setBold(true);
-
-        return [];
+        return [
+            'ID',
+            'Nombre',
+            'Empresa',
+            'Teléfono',
+            'Servicio',
+            'Estado',
+            'Evento',
+            'Correo',
+            'WhatsApp',
+            'Llamada',
+            'Reunión',
+        ];
     }
 }

@@ -972,3 +972,40 @@ Route::get('/comparacion-semanal/{scope}/{eventoId?}', function($scope, $eventoI
         'semana_anterior' => $semanaAnterior
     ]);
 });
+
+Route::get('/metricas-servicios/{eventoId?}', function($eventoId = 'general') {
+    // Servicios a considerar (puedes mover esto a un config si lo usas en varios lugares)
+    $servicios = ['SERVICE DESK', 'CCTV', 'SOFTWARE', 'MODULO'];
+    
+    $datosServicios = collect($servicios)->map(function($servicio) use ($eventoId) {
+        $monto = DB::table('cotizaciones')
+            ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
+            ->when($eventoId != 'general', function($query) use ($eventoId) {
+                return $query->where('cliente.events_id', $eventoId);
+            })
+            ->where('cliente.servicios', 'LIKE', '%'.$servicio.'%')
+            ->sum('cotizaciones.total_con_igv');
+            
+        return [
+            'name' => $servicio,
+            'value' => $monto ? round($monto, 2) : 0,
+            // Puedes agregar más datos aquí si los necesitas
+            'itemStyle' => [
+                'color' => getColorForService($servicio) // Función auxiliar para colores
+            ]
+        ];
+    })->toArray();
+
+    return response()->json($datosServicios);
+});
+
+// Función auxiliar para colores (opcional)
+function getColorForService($servicio) {
+    $colors = [
+        'SERVICE DESK' => '#5470C6',
+        'CCTV' => '#91CC75',
+        'SOFTWARE' => '#FAC858',
+        'MODULO' => '#EE6666'
+    ];
+    return $colors[$servicio] ?? '#73C0DE';
+}

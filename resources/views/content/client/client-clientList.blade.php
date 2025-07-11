@@ -248,15 +248,22 @@
 
         });
 
-        $('#btnExportar').on('click', function(e) {
-            e.preventDefault();
+      $('#btnExportar').on('click', function(e) {
+    e.preventDefault();
 
-            const servicio = $('#servicioFilter').val() || '';
-            const evento_id = $('#eventoFilter').val() || '';
+    const servicio = $('#servicioFilter').val() || '';
+    const evento_id = $('#eventoFilter').val() || '';
 
-            const url =
-                `{{ route('client.exportar') }}?servicio=${encodeURIComponent(servicio)}&evento_id=${evento_id}`;
-            window.location.href = url;
-        });
+    console.log('[ExportarExcel] Botón exportar presionado');
+    console.log('[ExportarExcel] Filtro - Servicio:', servicio);
+    console.log('[ExportarExcel] Filtro - Evento ID:', evento_id);
+
+    const url = `{{ route('client.exportar') }}?servicio=${encodeURIComponent(servicio)}&evento_id=${evento_id}`;
+    
+    console.log('[ExportarExcel] URL generada para exportar:', url);
+
+    window.location.href = url;
+});
+
     </script>
 @endpush

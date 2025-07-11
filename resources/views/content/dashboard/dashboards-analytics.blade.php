@@ -28,6 +28,7 @@
     <script src="{{ asset('assets/js/canales-contacto.js') }}"></script>
     <script src="{{ asset('assets/js/cotizaciones.js') }}"></script>
     <script src="{{ asset('assets/js/semanal.js') }}"></script>
+    <script src="{{ asset('assets/js/servicios.js') }}"></script>
 
         
 
