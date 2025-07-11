@@ -213,22 +213,33 @@ class Client extends Controller
 public function exportarExcel(Request $request)
 {
     $servicio = $request->query('servicio');
-    $evento_id = $request->query('evento_id'); // 👈 aquí estaba el error
+    $evento_id = $request->query('evento_id');
 
-    Log::info('Exportando clientes a Excel', [
+    Log::info('[ExportarExcel] Petición recibida para exportar clientes a Excel', [
         'servicio' => $servicio,
         'evento_id' => $evento_id,
     ]);
-try {
-    Log::info('Antes de descargar Excel');
-    return Excel::download(new ClientesExport($servicio, $evento_id), 'clientes.xlsx');
-} catch (\Exception $e) {
-    Log::error('Error al exportar Excel de clientes: ' . $e->getMessage(), [
-        'trace' => $e->getTraceAsString()
-    ]);
-    return response()->json(['error' => 'No se pudo generar el Excel'], 500);
-}
 
+    try {
+        Log::debug('[ExportarExcel] Inicializando clase ClientesExport');
+        $export = new ClientesExport($servicio, $evento_id);
+
+        Log::debug('[ExportarExcel] Ejecutando descarga de Excel');
+        $response = Excel::download($export, 'clientes.xlsx');
+
+        Log::info('[ExportarExcel] Excel generado exitosamente.');
+        return $response;
+
+    } catch (\Exception $e) {
+        Log::error('[ExportarExcel] Error al exportar Excel de clientes', [
+            'mensaje' => $e->getMessage(),
+            'archivo' => $e->getFile(),
+            'línea' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        return response()->json(['error' => 'No se pudo generar el Excel'], 500);
+    }
 }
 
 
