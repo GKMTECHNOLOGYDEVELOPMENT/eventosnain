@@ -85,4 +85,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\EventUser::class, 'user_id');
     }
+
+    // app/Models/User.php
+
+// Añade dentro de la clase User:
+
+public function actividadesCreadas()
+{
+    return $this->hasMany(Actividad::class, 'user_id');
+}
+
+public function actividadesInvitado()
+{
+    return $this->belongsToMany(Actividad::class, 'invitados', 'id_usuarios', 'actividad_id');
+}
+
 }

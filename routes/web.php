@@ -99,8 +99,19 @@ Route::post('/usuarios/store', [UsuarioController::class, 'store'])->name('usuar
 
 //calendario
 Route::get('/client/clientCalendario', [Client::class, 'calendario'])->name('client-clientCalendario')->middleware('auth');
-Route::get('/calendario', [Calendario::class, 'index']);
-
+Route::group(['middleware' => 'auth'], function() {
+    // Vista del calendario
+    Route::get('/calendario', [Calendario::class, 'show'])->name('calendario.index');
+    
+    // API para el calendario
+    Route::prefix('api/calendario')->group(function() {
+        Route::get('/eventos', [Calendario::class, 'index']);
+        Route::post('/eventos', [Calendario::class, 'store']);
+        Route::put('/eventos/{id}', [Calendario::class, 'update']);
+        Route::delete('/eventos/{id}', [Calendario::class, 'destroy']);
+        Route::get('/usuarios-invitados', [Calendario::class, 'getUsersForInvites']);
+    });
+});
 Route::post('client/events', [client::class, 'evento'])->name('events.store');
 
 

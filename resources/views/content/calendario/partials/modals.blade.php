@@ -98,10 +98,19 @@
     </div>
     <div class="offcanvas-body my-auto mx-0 flex-grow-0">
         <form>
+                @csrf
+
             <div class="mb-3">
                 <label class="form-label">Título</label>
                 <input type="text" class="form-control" placeholder="Título del evento">
             </div>
+
+   <div class="mb-3 d-none" id="creadoPorDiv">
+    <label class="form-label">Creado por:</label>
+    <input type="text" class="form-control" id="creadoPorInput" readonly>
+</div>
+
+
 
             <div class="mb-3">
                 <label class="form-label">Etiqueta</label>
@@ -113,7 +122,7 @@
                     <option value="otros">🔘 Otros</option>
                 </select>
             </div>
-            
+
 
 
             <div class="mb-3">
@@ -141,13 +150,12 @@
             <div class="mb-3">
                 <label class="form-label text-uppercase text-muted small fw-semibold">Invitados</label>
                 <select id="selectInvitados" class="form-select select2" multiple>
-                    <option>Juan Pérez</option>
-                    <option>María Rodríguez</option>
-                    <option>Pedro Sánchez</option>
-                    <option>Lucía Gutiérrez</option>
-                    <option>Antonio Vargas</option>
+                    @foreach($users as $user)
+                    <option value="{{ $user['id'] }}" data-email="{{ $user['email'] }}">
+                        {{ $user['text'] }}
+                    </option>
+                    @endforeach
                 </select>
-
             </div>
 
             <div class="mb-3">
@@ -155,17 +163,17 @@
                 <input type="text" class="form-control" placeholder="Ingrese ubicación">
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Descripción</label>
-                <textarea class="form-control" rows="3" placeholder="Ingrese descripción..."></textarea>
-            </div>
+         <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea id="descripcionEvento" name="descripcion" class="form-control" rows="3" placeholder="Ingrese descripción..."></textarea>
+        </div>
 
             <div class="d-grid gap-2">
                 <button type="submit" class="btn btn-primary" id="btnGuardarEvento">Guardar</button>
                 <button type="button" class="btn btn-danger d-none" id="btnEliminarEvento">Eliminar</button>
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Cancelar</button>
-              </div>
-              
+            </div>
+
         </form>
     </div>
 </div>
