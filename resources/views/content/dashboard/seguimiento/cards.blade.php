@@ -48,15 +48,21 @@
             <div class="row g-0">
                 <!-- 📊 Gráfico dinámico -->
                 <div class="col-md-8 border-end">
-                    <div class="card-body">
-                        <h5 class="card-title text-primary mb-0">
-                            <i class="fas fa-user-plus me-2"></i> Clientes Registrados por Usuario
-                        </h5>
-                        <div class="text-center mt-2">
-                            <div id="chartClientesRegistrados" style="height: 250px;"></div>
-                        </div>
-                    </div>
-                </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title text-primary mb-0">
+                <i class="fas fa-user-plus me-2"></i> Clientes Registrados
+            </h5>
+            <div class="badge bg-light-primary rounded-pill">
+                Total: <span id="cantidadClientes">0</span>
+            </div>
+        </div>
+        <div id="chartClientesRegistrados" style="height: 250px;"></div>
+        <div class="text-end mt-2">
+            <small class="text-muted">Datos actualizados al: <?= date('d/m/Y') ?></small>
+        </div>
+    </div>
+</div>
 
                 <!-- 🔽 Filtros -->
                 <div class="col-md-4 d-flex flex-column justify-content-between">
@@ -68,9 +74,9 @@
                             </label>
                             <select id="selectUsuario" class="form-select border-primary w-100">
                                 <option value="">Seleccione...</option>
-                                <option value="1">Luis García</option>
-                                <option value="2">Ana Torres</option>
-                                <option value="3">Carlos Paredes</option>
+                                @foreach($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -91,23 +97,23 @@
                         <h3 class="fw-bold text-success">
                             <i class="fas fa-users me-1"></i>
 
-                            <span id="cantidadClientes">17</span>
+                            <span id="totalClientes">0</span>
                         </h3>
                         <p class="text-secondary small m-0">Usuarios con contacto este mes</p>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
 
-        <div class="card mt-4">
-            <div class="card-body">
-                <h5 class="card-title mb-4 text-primary">
-                    <i class="fas fa-chart-area me-2"></i> Evolución Comercial
-                </h5>
-                <div id="funnelEmbudoVentas" style="height: 380px;"></div>
-            </div>
-        </div>
+      <div class="card mt-4">
+    <div class="card-body">
+        <h5 class="card-title mb-4 text-primary">
+            <i class="fas fa-chart-area me-2"></i> Evolución Comercial
+        </h5>
+        <div id="funnelEmbudoVentas" style="height: 380px;"></div>
+    </div>
+</div>
 
         <div class="card mt-4">
             <div class="card-body">

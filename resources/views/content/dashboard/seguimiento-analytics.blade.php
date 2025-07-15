@@ -27,8 +27,14 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts-liquidfill/dist/echarts-liquidfill.min.js"></script>
     <script src="{{ asset('assets/js/seguimiento/seguimiento.js') }}"></script>
+    <script src="{{ asset('assets/js/seguimiento/cliente.js') }}"></script>
+    <script src="{{ asset('assets/js/seguimiento/funel.js') }}"></script>
+        <script src="{{ asset('assets/js/seguimiento/contactabilidad.js') }}"></script>
 
+        <script src="{{ asset('assets/js/seguimiento/estado.js') }}"></script>
+        <script src="{{ asset('assets/js/seguimiento/fecha.js') }}"></script>
 
+contactabilidad.js
         
 
 @endpush

@@ -14,21 +14,43 @@
         </h5>
 
         <div class="row text-center">
-            <div class="col-md-6">
-                <div class="p-3 border rounded shadow-sm bg-light">
-                    <h6 class="text-success mb-1"><i class="fas fa-user-check me-1"></i> Activos</h6>
-                    <h2 class="fw-bold text-success m-0" id="clientes-activos">152</h2>
+            <!-- Pendientes -->
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div class="p-3 border rounded shadow-sm bg-light-warning">
+                    <h6 class="text-warning mb-1">
+                        <i class="fas fa-clock me-1"></i> Pendientes
+                    </h6>
+                    <h2 class="fw-bold text-warning m-0" id="clientes-pendientes">0</h2>
+                    <small class="text-muted">Clientes por atender</small>
+                </div>
+            </div>
+
+            <!-- En Proceso -->
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div class="p-3 border rounded shadow-sm bg-light-primary">
+                    <h6 class="text-primary mb-1">
+                        <i class="fas fa-spinner me-1"></i> En Proceso
+                    </h6>
+                    <h2 class="fw-bold text-primary m-0" id="clientes-en-proceso">0</h2>
                     <small class="text-muted">Clientes en seguimiento</small>
                 </div>
             </div>
 
-            <div class="col-md-6 mt-3 mt-md-0">
-                <div class="p-3 border rounded shadow-sm bg-light">
-                    <h6 class="text-danger mb-1"><i class="fas fa-user-times me-1"></i> Inactivos</h6>
-                    <h2 class="fw-bold text-danger m-0" id="clientes-inactivos">48</h2>
-                    <small class="text-muted">Sin interacción reciente</small>
+            <!-- Completados -->
+            <div class="col-md-4">
+                <div class="p-3 border rounded shadow-sm bg-light-success">
+                    <h6 class="text-success mb-1">
+                        <i class="fas fa-check-circle me-1"></i> Completados
+                    </h6>
+                    <h2 class="fw-bold text-success m-0" id="clientes-completados">0</h2>
+                    <small class="text-muted">Procesos finalizados</small>
                 </div>
             </div>
+        </div>
+
+        <!-- Total (opcional) -->
+        <div class="text-center mt-3">
+            <small class="text-muted">Total de clientes: <span id="total-clientes-estados" class="fw-bold">0</span></small>
         </div>
     </div>
 </div>

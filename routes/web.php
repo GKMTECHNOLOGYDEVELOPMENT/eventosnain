@@ -52,6 +52,7 @@ use App\Http\Controllers\tables\Basic as TablesBasic;
 use App\Http\Controllers\usuario\UsuarioController;
 use App\Models\CondicionComercial;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -62,9 +63,11 @@ Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics')->middl
 Route::get('/seguimiento', [SeguimientoController::class, 'index'])
     ->name('seguimiento-analytics')
     ->middleware('auth');
-
-
-
+Route::get('/dashboard/client-data', [SeguimientoController::class, 'getClientData']);
+Route::get('/dashboard/data', [SeguimientoController::class, 'getDashboardData']);
+Route::get('/dashboard/sales-funnel-data', [SeguimientoController::class, 'getSalesFunnelData']);
+Route::get('/dashboard/contact-effectiveness-data', [SeguimientoController::class, 'getContactEffectivenessData']);
+Route::get('/dashboard/client-status-data', [SeguimientoController::class, 'getClientStatusData']);
 //Client
 Route::get('/client/clientList', [Client::class, 'index'])->name('client-clientList')->middleware('auth');
 Route::get('/client/newClient', [Client::class, 'create'])->name('client-newClient')->middleware('auth');
@@ -399,7 +402,84 @@ Route::post('/salida/eliminar', [client::class, 'eliminarSalida'])->name('salida
 Route::post('/salida_user/guardar', [client::class, 'guardar'])->name('salida_user.guardar');
 Route::get('/clientes', [Client::class, 'getClientes'])->name('api.clientes')->middleware('auth');
 
+Route::get('/evento/{eventoId}/usuario/{usuarioId}/datos', function ($eventoId, $usuarioId) {
+    // Obtener fechas para filtros temporales
+    $now = now();
+    $mesActualInicio = $now->copy()->startOfMonth()->format('Y-m-d');
+    $mesActualFin = $now->copy()->endOfMonth()->format('Y-m-d');
+    $mesAnteriorInicio = $now->copy()->subMonth()->startOfMonth()->format('Y-m-d');
+    $mesAnteriorFin = $now->copy()->subMonth()->endOfMonth()->format('Y-m-d');
 
+$queryClientes = DB::table('cliente')
+    ->when($eventoId != 'general', function($q) use ($eventoId) {
+        return $q->where('events_id', $eventoId);
+    })
+    ->when($usuarioId != 'general', function($q) use ($usuarioId) {
+        return $q->where('user_id', $usuarioId); // Solo si 'user_id' está en la tabla 'cliente'
+    });
+
+
+    // CONSULTA BASE PARA COTIZACIONES (afectada por evento y usuario)
+    $queryCotizaciones = DB::table('cotizaciones')
+        ->when($eventoId != 'general', function($q) {
+            return $q->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id');
+        });
+
+    // Aplicar filtros a cotizaciones
+    if ($eventoId != 'general') {
+        $queryCotizaciones->where('cliente.events_id', $eventoId);
+    }
+    if ($usuarioId != 'general') {
+        $queryCotizaciones->where('cotizaciones.user_id', $usuarioId);
+    }
+
+    // Obtener datos del evento si aplica
+    $evento = $eventoId != 'general' ? DB::table('salida')->find($eventoId) : null;
+    $usuario = $usuarioId != 'general' ? DB::table('users')->find($usuarioId) : null;
+
+    // Obtener métricas principales
+    $totalClientes = $queryClientes->count();
+    $totalCotizaciones = $queryCotizaciones->count();
+    
+    $cotizacionesMesActual = $queryCotizaciones->clone()
+        ->whereBetween('fecha_emision', [$mesActualInicio, $mesActualFin])
+        ->count();
+
+    $cotizacionesMesAnterior = $queryCotizaciones->clone()
+        ->whereBetween('fecha_emision', [$mesAnteriorInicio, $mesAnteriorFin])
+        ->count();
+
+    // Calcular montos y tasas
+    $montoMesActual = $queryCotizaciones->clone()
+        ->whereBetween('fecha_emision', [$mesActualInicio, $mesActualFin])
+        ->sum('total_con_igv');
+
+    $montoMesAnterior = $queryCotizaciones->clone()
+        ->whereBetween('fecha_emision', [$mesAnteriorInicio, $mesAnteriorFin])
+        ->sum('total_con_igv');
+
+    $tasaExito = $queryCotizaciones->clone()
+        ->where('estado', 'aprobada')
+        ->count() / max($totalCotizaciones, 1) * 100;
+
+    return response()->json([
+        'meta_registros' => $evento ? $evento->meta_registros : 0,
+        'total_clientes' => $totalClientes,
+        'total_cotizaciones' => $totalCotizaciones,
+        'tasa_exito' => $tasaExito,
+        'cotizaciones_vencidas' => $queryCotizaciones->clone()
+            ->where('estado', 'vencida')
+            ->count(),
+        'cotizaciones_mes_actual' => $cotizacionesMesActual,
+        'cotizaciones_mes_anterior' => $cotizacionesMesAnterior,
+        'monto_mes_actual' => $montoMesActual,
+        'monto_mes_anterior' => $montoMesAnterior,
+        'filtros' => [
+            'evento' => $evento ? $evento->title : 'General',
+            'usuario' => $usuario ? $usuario->name : 'General'
+        ]
+    ]);
+});
 //evento 
 Route::get('/evento/{id}/datos', function ($id) {
     // Obtener fechas para mes actual y anterior
@@ -516,53 +596,40 @@ Route::get('/evento/{id}/datos', function ($id) {
 
 
 // Rutas para métricas de seguimiento
-Route::get('/metricas-seguimiento/{eventoId}', function ($eventoId) {
+Route::get('/metricas-seguimiento/{eventoId}/usuario/{usuarioId}', function ($eventoId, $usuarioId) {
     $now = now();
 
-    // Clientes en riesgo (sin contacto)
-    $clientesRiesgo = DB::table('cliente')
-        ->when($eventoId != 'general', function ($query) use ($eventoId) {
-            return $query->where('events_id', $eventoId);
-        })
-        ->whereNull('llamada')
-        ->whereNull('whatsapp')
-        ->whereNull('reunion')
-        ->whereNull('contrato')
+    // Consulta base para clientes
+    $queryClientes = DB::table('cliente')
+        ->when($eventoId != 'general', fn($query) => $query->where('events_id', $eventoId))
+        ->when($usuarioId != 'general', fn($query) => $query->where('user_id', $usuarioId));
+
+    // Riesgo: todos los campos en "PENDIENTE"
+    $clientesRiesgo = $queryClientes->clone()
+        ->where('status', 'PENDIENTE')
         ->select('id', 'nombre', 'empresa', 'fecharegistro')
         ->get();
 
     // Promedio días desde registro
-    $promedioDias = DB::table('cliente')
-        ->when($eventoId != 'general', function ($query) use ($eventoId) {
-            return $query->where('events_id', $eventoId);
-        })
+    $queryPromedio = DB::table('cliente')
+        ->when($eventoId != 'general', fn($query) => $query->where('events_id', $eventoId))
+        ->when($usuarioId != 'general', fn($query) => $query->where('user_id', $usuarioId));
+
+    $promedioDias = $queryPromedio
         ->selectRaw('AVG(DATEDIFF(?, fecharegistro)) as promedio', [$now->format('Y-m-d')])
         ->first();
 
-    // Proceso estancado (>15 días sin interacción)
-    $procesoEstancado = DB::table('cliente')
-        ->when($eventoId != 'general', function ($query) use ($eventoId) {
-            return $query->where('events_id', $eventoId);
-        })
-        ->whereRaw('DATEDIFF(?, fecharegistro) > 15', [$now->format('Y-m-d')])
+    // Estancado: al menos un campo en "PENDIENTE" y más de 15 días
+    $procesoEstancado = $queryClientes->clone()
         ->where(function ($query) {
-            $query->whereNull('llamada')
-                ->orWhereNull('whatsapp')
-                ->orWhereNull('reunion')
-                ->orWhereNull('contrato');
+            $query->where('status', 'En Proceso');
         })
         ->select('id', 'nombre', 'empresa', 'fecharegistro', 'llamada', 'whatsapp', 'reunion', 'contrato')
         ->get();
 
-    // Interacción completa (todos los canales)
-    $interaccionCompleta = DB::table('cliente')
-        ->when($eventoId != 'general', function ($query) use ($eventoId) {
-            return $query->where('events_id', $eventoId);
-        })
-        ->whereNotNull('llamada')
-        ->whereNotNull('whatsapp')
-        ->whereNotNull('reunion')
-        ->whereNotNull('contrato')
+    // Completa: todos los campos en "SI"
+    $interaccionCompleta = $queryClientes->clone()
+        ->where('status', 'Atendido')
         ->select('id', 'nombre', 'empresa', 'fecharegistro')
         ->get();
 
@@ -573,53 +640,43 @@ Route::get('/metricas-seguimiento/{eventoId}', function ($eventoId) {
         'interaccion_completa' => $interaccionCompleta,
         'total_clientes_riesgo' => count($clientesRiesgo),
         'total_proceso_estancado' => count($procesoEstancado),
-        'total_interaccion_completa' => count($interaccionCompleta)
+        'total_interaccion_completa' => count($interaccionCompleta),
+        'filtros' => [
+            'evento' => $eventoId != 'general' ? DB::table('salida')->find($eventoId)->title : 'General',
+            'usuario' => $usuarioId != 'general' ? DB::table('users')->find($usuarioId)->name : 'General'
+        ]
     ]);
 });
 
-// Ruta para cargar detalles de clientes (usada en los modals)
-Route::get('/metricas-seguimiento-detalle/{tipo}/{eventoId}', function ($tipo, $eventoId) {
+// Ruta para cargar detalles de clientes (modals)
+Route::get('/metricas-seguimiento-detalle/{tipo}/{eventoId}/usuario/{usuarioId}', function ($tipo, $eventoId, $usuarioId) {
     $now = now();
+
+    $queryClientes = DB::table('cliente')
+        ->when($eventoId != 'general', fn($query) => $query->where('events_id', $eventoId))
+        ->when($usuarioId != 'general', fn($query) => $query->where('user_id', $usuarioId));
 
     switch ($tipo) {
         case 'riesgo':
-            $clientes = DB::table('cliente')
-                ->when($eventoId != 'general', function ($query) use ($eventoId) {
-                    return $query->where('events_id', $eventoId);
-                })
-                ->whereNull('llamada')
-                ->whereNull('whatsapp')
-                ->whereNull('reunion')
-                ->whereNull('contrato')
+            $clientes = $queryClientes->clone()
+                ->where('status', 'PENDIENTE')
                 ->select('id', 'nombre', 'empresa', 'email', 'telefono', 'fecharegistro')
                 ->get();
             break;
 
         case 'estancado':
-            $clientes = DB::table('cliente')
-                ->when($eventoId != 'general', function ($query) use ($eventoId) {
-                    return $query->where('events_id', $eventoId);
-                })
+            $clientes = $queryClientes->clone()
                 ->whereRaw('DATEDIFF(?, fecharegistro) > 15', [$now->format('Y-m-d')])
                 ->where(function ($query) {
-                    $query->whereNull('llamada')
-                        ->orWhereNull('whatsapp')
-                        ->orWhereNull('reunion')
-                        ->orWhereNull('contrato');
+                    $query->where('status', 'En Proceso');     
                 })
                 ->select('id', 'nombre', 'empresa', 'email', 'telefono', 'fecharegistro', 'llamada', 'whatsapp', 'reunion', 'contrato')
                 ->get();
             break;
 
         case 'completa':
-            $clientes = DB::table('cliente')
-                ->when($eventoId != 'general', function ($query) use ($eventoId) {
-                    return $query->where('events_id', $eventoId);
-                })
-                ->whereNotNull('llamada')
-                ->whereNotNull('whatsapp')
-                ->whereNotNull('reunion')
-                ->whereNotNull('contrato')
+            $clientes = $queryClientes->clone()
+                ->where('status', 'Atendido')
                 ->select('id', 'nombre', 'empresa', 'email', 'telefono', 'fecharegistro')
                 ->get();
             break;
@@ -631,92 +688,83 @@ Route::get('/metricas-seguimiento-detalle/{tipo}/{eventoId}', function ($tipo, $
     return response()->json($clientes);
 });
 
-
-// Rutas para los tops de clientes y vendedores
-Route::get('/top-metricas/{eventoId}', function ($eventoId) {
-    // Obtener los últimos 5 meses
+Route::get('/top-metricas/{eventoId}/usuario/{usuarioId}', function ($eventoId, $usuarioId) {
     $now = now();
     $meses = [];
     $mesesNombres = [];
+
     for ($i = 4; $i >= 0; $i--) {
         $mes = $now->copy()->subMonths($i);
         $meses[] = $mes->format('Y-m');
-        $mesesNombres[] = $mes->locale('es')->shortMonthName;
+        $mesesNombres[] = ucfirst($mes->locale('es')->shortMonthName);
     }
 
-    // Top 4 clientes con mayor monto cotizado
-    $topClientes = DB::table('cotizaciones')
-        ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-        ->when($eventoId != 'general', function ($query) use ($eventoId) {
-            return $query->where('cliente.events_id', $eventoId);
-        })
-        ->select(
-            'cliente.nombre as cliente_nombre',
-            DB::raw('SUM(cotizaciones.total_con_igv) as monto_total'),
-            DB::raw('COUNT(cotizaciones.id) as cantidad_cotizaciones')
-        )
-        ->groupBy('cliente.id', 'cliente.nombre')
-        ->orderByDesc('monto_total')
-        ->limit(4)
-        ->get()
-        ->pluck('cliente_nombre')
-        ->toArray();
+    // CLIENTES
+    $queryClientes = DB::table('cotizaciones')
+        ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id');
 
-    // Datos mensuales para cada cliente top
+    if ($eventoId !== 'general') {
+        $queryClientes->where('cliente.events_id', $eventoId);
+    }
+
+    if ($usuarioId !== 'general') {
+        $queryClientes->where('cotizaciones.user_id', $usuarioId);
+    }
+
+    // Aplica límite solo si no hay filtros
+    $topClientesQuery = $queryClientes->clone()
+        ->select('cliente.nombre', DB::raw('SUM(cotizaciones.total_con_igv) as total'))
+        ->groupBy('cliente.id', 'cliente.nombre')
+        ->orderByDesc('total');
+
+    if ($eventoId === 'general' && $usuarioId === 'general') {
+        $topClientesQuery->limit(4);
+    }
+
+    $topClientes = $topClientesQuery->pluck('nombre')->toArray();
+
     $datosClientes = [];
     foreach ($topClientes as $cliente) {
-        $montosPorMes = [];
-        foreach ($meses as $mes) {
-            $monto = DB::table('cotizaciones')
-                ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
+        $datosClientes[$cliente] = array_map(function ($mes) use ($queryClientes, $cliente) {
+            return (float) $queryClientes->clone()
                 ->where('cliente.nombre', $cliente)
-                ->when($eventoId != 'general', function ($query) use ($eventoId) {
-                    return $query->where('cliente.events_id', $eventoId);
-                })
                 ->where(DB::raw("DATE_FORMAT(cotizaciones.fecha_emision, '%Y-%m')"), $mes)
                 ->sum('cotizaciones.total_con_igv');
-
-            $montosPorMes[] = $monto ? round($monto, 2) : 0;
-        }
-        $datosClientes[$cliente] = $montosPorMes;
+        }, $meses);
     }
 
-    // Top 4 vendedores con más cotizaciones
-    $topVendedores = DB::table('cotizaciones')
-        ->join('users', 'cotizaciones.user_id', '=', 'users.id')
-        ->when($eventoId != 'general', function ($query) use ($eventoId) {
-            return $query->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-                ->where('cliente.events_id', $eventoId);
-        })
-        ->select(
-            'users.name as vendedor_nombre',
-            DB::raw('COUNT(cotizaciones.id) as cantidad_cotizaciones')
-        )
-        ->groupBy('users.id', 'users.name')
-        ->orderByDesc('cantidad_cotizaciones')
-        ->limit(4)
-        ->get()
-        ->pluck('vendedor_nombre')
-        ->toArray();
+    // VENDEDORES
+    $queryVendedores = DB::table('cotizaciones')
+        ->join('users', 'cotizaciones.user_id', '=', 'users.id');
 
-    // Datos mensuales para cada vendedor top
+    if ($eventoId !== 'general') {
+        $queryVendedores->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
+                        ->where('cliente.events_id', $eventoId);
+    }
+
+    if ($usuarioId !== 'general') {
+        $queryVendedores->where('cotizaciones.user_id', $usuarioId);
+    }
+
+    $topVendedoresQuery = $queryVendedores->clone()
+        ->select('users.name', DB::raw('COUNT(cotizaciones.id) as total'))
+        ->groupBy('users.id', 'users.name')
+        ->orderByDesc('total');
+
+    if ($eventoId === 'general' && $usuarioId === 'general') {
+        $topVendedoresQuery->limit(4);
+    }
+
+    $topVendedores = $topVendedoresQuery->pluck('name')->toArray();
+
     $datosVendedores = [];
     foreach ($topVendedores as $vendedor) {
-        $cotizacionesPorMes = [];
-        foreach ($meses as $mes) {
-            $count = DB::table('cotizaciones')
-                ->join('users', 'cotizaciones.user_id', '=', 'users.id')
-                ->when($eventoId != 'general', function ($query) use ($eventoId) {
-                    return $query->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-                        ->where('cliente.events_id', $eventoId);
-                })
+        $datosVendedores[$vendedor] = array_map(function ($mes) use ($queryVendedores, $vendedor) {
+            return (int) $queryVendedores->clone()
                 ->where('users.name', $vendedor)
                 ->where(DB::raw("DATE_FORMAT(cotizaciones.fecha_emision, '%Y-%m')"), $mes)
                 ->count();
-
-            $cotizacionesPorMes[] = $count;
-        }
-        $datosVendedores[$vendedor] = $cotizacionesPorMes;
+        }, $meses);
     }
 
     return response()->json([
@@ -724,9 +772,17 @@ Route::get('/top-metricas/{eventoId}', function ($eventoId) {
         'top_clientes' => $topClientes,
         'datos_clientes' => $datosClientes,
         'top_vendedores' => $topVendedores,
-        'datos_vendedores' => $datosVendedores
+        'datos_vendedores' => $datosVendedores,
+        'filtros' => [
+            'evento' => $eventoId !== 'general'
+                ? optional(DB::table('salida')->find($eventoId))->title ?? 'Evento desconocido'
+                : 'General',
+            'usuario' => $usuarioId !== 'general'
+                ? optional(DB::table('users')->find($usuarioId))->name ?? 'Usuario desconocido'
+                : 'General',
+        ]
     ]);
-});
+})->where(['eventoId' => 'general|\d+', 'usuarioId' => 'general|\d+']);
 
 
 // Ruta para la tasa de seguimiento activo
@@ -780,138 +836,117 @@ Route::get('/clientes-interaccion/{eventoId}', function ($eventoId) {
     return response()->json($clientes);
 });
 
-// Ruta para los canales de contacto (general y por evento)
-Route::get('/canales-contacto/{scope}/{eventoId?}', function ($scope, $eventoId = null) {
-    // Validar el scope
-    if (!in_array($scope, ['general', 'evento'])) {
-        return response()->json(['error' => 'Scope inválido'], 400);
-    }
 
-    // Base query para interacciones
+
+Route::get('/canales-contacto/{eventoId?}/usuario/{usuarioId?}', function ($eventoId = 'general', $usuarioId = 'general') {
     $query = DB::table('cliente');
 
-    // Filtrar por evento si es necesario
-    if ($scope === 'evento' && $eventoId) {
+    // Filtrar por evento si no es general
+    if ($eventoId !== 'general') {
         $query->where('events_id', $eventoId);
     }
 
-    // Contar interacciones por tipo
-    $llamadas = (clone $query)->whereNotNull('llamada')->count();
-    $whatsapp = (clone $query)->whereNotNull('whatsapp')->count();
-    $correos = (clone $query)->whereNotNull('correo')->count();
-    $reuniones = (clone $query)->whereNotNull('reunion')->count();
+    // Filtrar por usuario si no es general
+    if ($usuarioId !== 'general') {
+        $query->where('user_id', $usuarioId);
+    }
 
-    // Calcular total de interacciones (sin duplicar clientes con múltiples interacciones)
-    $totalInteracciones = $llamadas + $whatsapp + $correos + $reuniones;
+    // Contar solo los que tienen 'SI' en cada canal
+    $llamadas = (clone $query)->where('llamada', 'SI')->count();
+    $whatsapp = (clone $query)->where('whatsapp', 'SI')->count();
+    $correos  = (clone $query)->where('correo', 'SI')->count();
 
-    // Calcular porcentajes
+    $total = $llamadas + $whatsapp + $correos;
+
     $porcentajes = [
-        'llamadas' => $totalInteracciones > 0 ? round(($llamadas / $totalInteracciones) * 100) : 0,
-        'whatsapp' => $totalInteracciones > 0 ? round(($whatsapp / $totalInteracciones) * 100) : 0,
-        'correos' => $totalInteracciones > 0 ? round(($correos / $totalInteracciones) * 100) : 0,
-        'reuniones' => $totalInteracciones > 0 ? round(($reuniones / $totalInteracciones) * 100) : 0
+        'llamadas' => $total > 0 ? round(($llamadas / $total) * 100) : 0,
+        'whatsapp' => $total > 0 ? round(($whatsapp / $total) * 100) : 0,
+        'correos'  => $total > 0 ? round(($correos  / $total) * 100) : 0,
     ];
 
     return response()->json([
-        'scope' => $scope,
-        'evento_id' => $scope === 'evento' ? $eventoId : null,
-        'total_interacciones' => $totalInteracciones,
+        'evento' => $eventoId,
+        'usuario' => $usuarioId,
+        'total' => $total,
         'llamadas' => $llamadas,
         'whatsapp' => $whatsapp,
         'correos' => $correos,
-        'reuniones' => $reuniones,
         'porcentajes' => $porcentajes
     ]);
-});
-
-
+})->where(['eventoId' => 'general|\d+', 'usuarioId' => 'general|\d+']);
 
 // Ruta para el promedio de cotizaciones
-Route::get('/cotizaciones-promedio/{scope}/{eventoId?}', function ($scope, $eventoId = null) {
-    // Validar scope
-    if (!in_array($scope, ['general', 'evento'])) {
-        return response()->json(['error' => 'Scope inválido'], 400);
-    }
-
-    // Obtener año seleccionado (o actual por defecto)
+Route::get('/cotizaciones-promedio', function () {
     $anio = request()->input('anio', date('Y'));
+    $eventoId = request()->input('evento');
+    $usuarioId = request()->input('usuario');
 
-    $data = [];
     $meses = [
-        'Enero',
-        'Febrero',
-        'Marzo',
-        'Abril',
-        'Mayo',
-        'Junio',
-        'Julio',
-        'Agosto',
-        'Septiembre',
-        'Octubre',
-        'Noviembre',
-        'Diciembre'
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ];
 
-    // Consulta base
     $query = DB::table('cotizaciones')
-        ->selectRaw('MONTH(fecha_emision) as mes, AVG(total_con_igv) as promedio')
+        ->selectRaw('MONTH(fecha_emision) as mes, SUM(total_con_igv) as promedio')
         ->whereYear('fecha_emision', $anio)
         ->groupBy('mes')
         ->orderBy('mes');
 
-    // Filtrar por evento si es necesario
-    if ($scope === 'evento' && $eventoId) {
-        $query->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-            ->where('cliente.events_id', $eventoId);
+    // Filtrar por evento o usuario si corresponde
+    if ($eventoId || $usuarioId) {
+        $query->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id');
+    }
+
+    if ($eventoId) {
+        $query->where('cliente.events_id', $eventoId);
+    }
+
+    if ($usuarioId) {
+        $query->where('cotizaciones.user_id', $usuarioId);
     }
 
     $resultados = $query->get();
-
-    // Preparar datos para el gráfico
     $promedios = array_fill(0, 12, 0);
     foreach ($resultados as $row) {
         $promedios[$row->mes - 1] = round($row->promedio, 2);
     }
 
     return response()->json([
-        'scope' => $scope,
-        'evento_id' => $scope === 'evento' ? $eventoId : null,
         'anio' => $anio,
-        'meses' => array_slice($meses, 0, date('n')), // Solo meses hasta el actual
+        'meses' => array_slice($meses, 0, date('n')),
         'promedios' => array_slice($promedios, 0, date('n')),
     ]);
 });
 
-// Ruta para el estado de cotizaciones
-Route::get('/cotizaciones-estado/{scope}/{eventoId?}', function ($scope, $eventoId = null) {
-    // Validar scope
-    if (!in_array($scope, ['general', 'evento'])) {
-        return response()->json(['error' => 'Scope inválido'], 400);
-    }
+// Ruta para estado de cotizaciones
+Route::get('/cotizaciones-estado', function () {
+    $eventoId = request()->input('evento');
+    $usuarioId = request()->input('usuario');
 
-    // Consulta base
     $query = DB::table('cotizaciones')
         ->selectRaw('estado, COUNT(*) as cantidad');
 
-    // Filtrar por evento si es necesario
-    if ($scope === 'evento' && $eventoId) {
-        $query->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-            ->where('cliente.events_id', $eventoId);
+    if ($eventoId || $usuarioId) {
+        $query->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id');
+    }
+
+    if ($eventoId) {
+        $query->where('cliente.events_id', $eventoId);
+    }
+
+    if ($usuarioId) {
+        $query->where('cotizaciones.user_id', $usuarioId);
     }
 
     $resultados = $query->groupBy('estado')->get();
 
-    // Mapear estados a categorías consistentes
-    $estados = [
-        'Aprobadas' => 0,
-        'Pendientes' => 0,
-        'Rechazadas' => 0
-    ];
+    $estados = ['Aprobadas' => 0, 'Pendientes' => 0, 'Rechazadas' => 0];
 
     foreach ($resultados as $row) {
-        if (in_array(strtolower($row->estado), ['aprobada', 'aceptada'])) {
+        $estado = strtolower($row->estado);
+        if (in_array($estado, ['aprobada', 'aceptada'])) {
             $estados['Aprobadas'] += $row->cantidad;
-        } elseif (in_array(strtolower($row->estado), ['pendiente', 'en espera'])) {
+        } elseif (in_array($estado, ['pendiente', 'en espera'])) {
             $estados['Pendientes'] += $row->cantidad;
         } else {
             $estados['Rechazadas'] += $row->cantidad;
@@ -919,109 +954,181 @@ Route::get('/cotizaciones-estado/{scope}/{eventoId?}', function ($scope, $evento
     }
 
     return response()->json([
-        'scope' => $scope,
-        'evento_id' => $scope === 'evento' ? $eventoId : null,
         'estados' => $estados,
-        'total' => array_sum($estados)
+        'total' => array_sum($estados),
     ]);
 });
 
+Route::get('/comparacion-semanal', function (Request $request) {
+    $eventoId = $request->input('evento');
+    $usuarioId = $request->input('usuario');
 
-
-Route::get('/comparacion-semanal/{scope}/{eventoId?}', function ($scope, $eventoId = null) {
-    // Validar scope
-    if (!in_array($scope, ['general', 'evento'])) {
-        return response()->json(['error' => 'Scope inválido'], 400);
-    }
-
-    // Obtener fechas
     $hoy = Carbon::now();
     $inicioSemanaActual = $hoy->copy()->startOfWeek();
     $finSemanaActual = $hoy->copy()->endOfWeek();
     $inicioSemanaPasada = $hoy->copy()->subWeek()->startOfWeek();
     $finSemanaPasada = $hoy->copy()->subWeek()->endOfWeek();
 
-    // Consulta base
-    $queryActual = DB::table('cliente')
-        ->selectRaw('DAYOFWEEK(fecharegistro) as dia_semana, COUNT(*) as cantidad')
-        ->whereBetween('fecharegistro', [$inicioSemanaActual, $finSemanaActual])
-        ->groupBy('dia_semana');
+    // Base para ambas semanas
+    $buildQuery = function ($inicio, $fin) use ($eventoId, $usuarioId) {
+        $query = DB::table('cliente')
+            ->selectRaw('DAYOFWEEK(fecharegistro) as dia_semana, COUNT(*) as cantidad')
+            ->whereBetween('fecharegistro', [$inicio, $fin]);
 
-    $queryAnterior = DB::table('cliente')
-        ->selectRaw('DAYOFWEEK(fecharegistro) as dia_semana, COUNT(*) as cantidad')
-        ->whereBetween('fecharegistro', [$inicioSemanaPasada, $finSemanaPasada])
-        ->groupBy('dia_semana');
+        if ($eventoId) {
+            $query->where('events_id', $eventoId);
+        }
 
-    // Filtrar por evento si es necesario
-    if ($scope === 'evento' && $eventoId) {
-        $queryActual->where('events_id', $eventoId);
-        $queryAnterior->where('events_id', $eventoId);
-    }
+        if ($usuarioId) {
+            $query->where('user_id', $usuarioId);
+        }
 
-    $resultadosActual = $queryActual->get()->keyBy('dia_semana');
-    $resultadosAnterior = $queryAnterior->get()->keyBy('dia_semana');
+        return $query->groupBy('dia_semana')->get()->keyBy('dia_semana');
+    };
 
-    // Mapear días de la semana (1=Domingo, 2=Lunes...7=Sábado en MySQL)
+    $resultadosActual = $buildQuery($inicioSemanaActual, $finSemanaActual);
+    $resultadosAnterior = $buildQuery($inicioSemanaPasada, $finSemanaPasada);
+
+    // Mapear días de la semana (MySQL: 1=Dom, ..., 7=Sáb)
     $diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     $semanaActual = array_fill(0, 7, 0);
     $semanaAnterior = array_fill(0, 7, 0);
 
     foreach ($resultadosActual as $dia => $row) {
-        $index = ($dia - 1) % 7; // Convertir a índice 0-6
+        $index = ($dia - 1) % 7;
         $semanaActual[$index] = $row->cantidad;
     }
 
     foreach ($resultadosAnterior as $dia => $row) {
-        $index = ($dia - 1) % 7; // Convertir a índice 0-6
+        $index = ($dia - 1) % 7;
         $semanaAnterior[$index] = $row->cantidad;
     }
 
-    // Reordenar para que la semana empiece en Lunes
+    // Reordenar: que el lunes sea primero
     $semanaActual = array_merge(array_slice($semanaActual, 1), array_slice($semanaActual, 0, 1));
     $semanaAnterior = array_merge(array_slice($semanaAnterior, 1), array_slice($semanaAnterior, 0, 1));
 
     return response()->json([
-        'scope' => $scope,
-        'evento_id' => $scope === 'evento' ? $eventoId : null,
-        'dias_semana' => $diasSemana,
+        'evento_id' => $eventoId,
+        'usuario_id' => $usuarioId,
+        'dias_semana' => ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
         'semana_actual' => $semanaActual,
         'semana_anterior' => $semanaAnterior
     ]);
 });
 
-Route::get('/metricas-servicios/{eventoId?}', function($eventoId = 'general') {
-    // Servicios a considerar (puedes mover esto a un config si lo usas en varios lugares)
-    $servicios = ['SERVICE DESK', 'CCTV', 'SOFTWARE', 'MODULO'];
-    
-    $datosServicios = collect($servicios)->map(function($servicio) use ($eventoId) {
-        $monto = DB::table('cotizaciones')
-            ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
-            ->when($eventoId != 'general', function($query) use ($eventoId) {
-                return $query->where('cliente.events_id', $eventoId);
-            })
-            ->where('cliente.servicios', 'LIKE', '%'.$servicio.'%')
-            ->sum('cotizaciones.total_con_igv');
-            
+
+
+
+
+
+
+function getColorForService($servicio) {
+    return match ($servicio) {
+        'MODULO'        => '#FFD97D',
+        'CCTV'          => '#60D394',
+        'OTROS'         => '#B392AC',
+        'SERVICE DESK'  => '#3E8EDE',
+        'SOFTWARE'      => '#EE6055',
+        default         => '#CCCCCC',
+    };
+}
+
+Route::get('/metricas-servicios/{eventoId?}/usuario/{usuarioId?}', function ($eventoId = 'general', $usuarioId = 'general') {
+
+    $serviciosAgrupados = [
+        'MODULO'        => ['MODULO', 'MÓDULO'],
+        'CCTV'          => ['CCTV'],
+        'OTROS'         => ['OTROS'],
+        'SERVICE DESK'  => ['SERVICE DESK'],
+        'SOFTWARE'      => ['SOFTWARE'],
+    ];
+
+    $datosServicios = collect($serviciosAgrupados)->map(function ($variantes, $nombreAgrupado) use ($eventoId, $usuarioId) {
+        $query = DB::table('cotizaciones')
+            ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id');
+
+        if ($eventoId !== 'general') {
+            $query->where('cliente.events_id', $eventoId);
+        }
+
+        if ($usuarioId !== 'general') {
+            $query->where('cotizaciones.user_id', $usuarioId);
+        }
+
+        $query->where(function ($q) use ($variantes) {
+            foreach ($variantes as $servicio) {
+                $q->orWhere('cliente.servicios', 'LIKE', "%$servicio%");
+            }
+        });
+
+        $monto = $query->sum('cotizaciones.total_con_igv');
+
         return [
-            'name' => $servicio,
-            'value' => $monto ? round($monto, 2) : 0,
-            // Puedes agregar más datos aquí si los necesitas
-            'itemStyle' => [
-                'color' => getColorForService($servicio) // Función auxiliar para colores
-            ]
+            'name' => $nombreAgrupado,
+            'value' => round($monto, 2),
+            'itemStyle' => ['color' => getColorForService($nombreAgrupado)],
         ];
-    })->toArray();
+    })->filter(fn($item) => $item['value'] > 0) // Solo mostrar > 0
+      ->values();
 
     return response()->json($datosServicios);
-});
+})
+->where('eventoId', '[0-9]+|general')
+->where('usuarioId', '[0-9]+|general');
 
-// Función auxiliar para colores (opcional)
-function getColorForService($servicio) {
-    $colors = [
-        'SERVICE DESK' => '#5470C6',
-        'CCTV' => '#91CC75',
-        'SOFTWARE' => '#FAC858',
-        'MODULO' => '#EE6666'
-    ];
-    return $colors[$servicio] ?? '#73C0DE';
-}
+
+
+Route::get('/metricas-productos/{eventoId?}/usuario/{usuarioId?}', function ($eventoId = 'general', $usuarioId = 'general') {
+
+    $query = DB::table('cotizacion_productos')
+        ->join('cotizaciones', 'cotizacion_productos.cotizacion_id', '=', 'cotizaciones.id')
+        ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
+        ->select(
+            'cotizacion_productos.modulo_id as product_id',
+            DB::raw('SUM(cotizacion_productos.subtotal) as total')
+        )
+        ->groupBy('cotizacion_productos.modulo_id');
+
+    if ($eventoId !== 'general') {
+        $query->where('cliente.events_id', $eventoId);
+    }
+
+    if ($usuarioId !== 'general') {
+        $query->where('cotizaciones.user_id', $usuarioId);
+    }
+
+    $results = $query->get();
+
+    // Ahora necesitamos obtener nombres y colores para productos — asumo que tienes una tabla "modulos" o "productos"
+    // Si tienes tabla productos, cámbialo acá, yo hago ejemplo con modulos:
+    $modulos = DB::table('modulos')->pluck('codigo_modulo', 'id');
+
+    // Definir función de color para producto (modulo)
+    function getColorForProduct($productName) {
+        // Puedes definir tus colores o asignar uno random/fijo
+        $colors = [
+            'Producto A' => '#FFD97D',
+            'Producto B' => '#60D394',
+            'Producto C' => '#B392AC',
+            'Producto D' => '#3E8EDE',
+            'Producto E' => '#EE6055',
+        ];
+        return $colors[$productName] ?? '#CCCCCC';
+    }
+
+    $data = $results->map(function($item) use ($modulos) {
+        $name = $modulos[$item->product_id] ?? 'Producto #' . $item->product_id;
+        return [
+            'name' => $name,
+            'value' => round($item->total, 2),
+            'itemStyle' => ['color' => getColorForProduct($name)],
+        ];
+    })->filter(fn($item) => $item['value'] > 0)
+      ->values();
+
+    return response()->json($data);
+})
+->where('eventoId', '[0-9]+|general')
+->where('usuarioId', '[0-9]+|general');
+

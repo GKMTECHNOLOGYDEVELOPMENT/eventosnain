@@ -45,7 +45,7 @@
 </div>
 
 
-<div class="card mt-4">
+<!-- <div class="card mt-4">
     <div class="card-body">
         <h5 class="card-title mb-2 text-primary">
             <i class="fas fa-bullseye me-2"></i> Tasa de Seguimiento Activo
@@ -58,7 +58,7 @@
 
         <div id="seguimiento-activo-chart" style="height: 250px;"></div>
     </div>
-</div>
+</div> -->
 
 <div class="card mt-4">
     <div class="card-body">
@@ -67,13 +67,7 @@
                 <i class="fas fa-comments me-2"></i> Canales de Contacto Más Usados
             </h5>
             
-            <!-- Toggle para cambiar entre general/evento -->
-            <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="toggle-scope">
-                <label class="form-check-label" for="toggle-scope">
-                    <span id="scope-label" class="text-muted">Vista General</span>
-                </label>
-            </div>
+
         </div>
 
         <!-- Estado de carga -->
@@ -157,13 +151,7 @@
                 <i class="fas fa-balance-scale me-2"></i> Estado de Cotizaciones
             </h5>
             
-            <!-- Toggle General/Evento -->
-            <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="toggle-scope-estados">
-                <label class="form-check-label small" for="toggle-scope-estados">
-                    <span id="scope-label-estados">General</span>
-                </label>
-            </div>
+      
         </div>
         <div id="estado-cotizaciones-chart" style="height: 320px;"></div>
     </div>
