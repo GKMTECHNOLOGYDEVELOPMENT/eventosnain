@@ -39,7 +39,7 @@
       "slug": "app-chat"
     },
     {
-      "url": "/client/clientCalendario",
+      "url": "/calendario",
       "name": "Calendario",
       "icon": "menu-icon tf-icons bx bx-calendar",
       "slug": "app-calendar"
