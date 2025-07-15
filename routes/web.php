@@ -96,6 +96,7 @@ Route::post('/usuarios/store', [UsuarioController::class, 'store'])->name('usuar
 
 //calendario
 Route::get('/client/clientCalendario', [Client::class, 'calendario'])->name('client-clientCalendario')->middleware('auth');
+Route::get('/calendario', [Calendario::class, 'index']);
 
 Route::post('client/events', [client::class, 'evento'])->name('events.store');
 
