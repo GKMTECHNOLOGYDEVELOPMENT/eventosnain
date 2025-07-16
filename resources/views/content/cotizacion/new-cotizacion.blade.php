@@ -188,6 +188,22 @@
                         </div>
                     </div>
 
+
+                    <div class="mb-3">
+                        <label class="form-label" for="servicio_id">
+                            <i class="fas fa-concierge-bell me-2"></i>Servicios
+                        </label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="fas fa-tools"></i></span>
+                            <select class="form-control" id="servicio_id" name="servicio_id">
+                                <option value="">Seleccione un servicio</option>
+                                @foreach($servicios as $servicio)
+                                    <option value="{{ $servicio->id }}">{{ $servicio->nombre }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
                     <hr class="my-4">
 
                     <h5 class="mb-3"><i class="fas fa-boxes me-2"></i> Productos/Servicios</h5>
@@ -663,6 +679,13 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
                 return false;
             }
 
+               // Validar condiciones comerciales
+            if (!$('#servicio_id').val()) {
+                $('#servicio_id').addClass('is-invalid');
+                mostrarAlertaError('Debe seleccionar un servicio', '#servicio_id');
+                return false;
+            }
+
             // Validar observaciones
             if (!$('#observaciones').val().trim()) {
                 $('#observaciones').addClass('is-invalid');
@@ -690,6 +713,8 @@ $modulosOptions .= '<option value="' . $modulo->id . '" data-precio="' . $modulo
                 cliente_id: $('#cliente_id').val(),
                 validez: $('#validez').val(),
                 condiciones_comerciales: $('#condiciones_comerciales').val(),
+                servicio_id: $('#servicio_id').val(),
+
                 observaciones: $('#observaciones').val(),
                 productos: []
             };

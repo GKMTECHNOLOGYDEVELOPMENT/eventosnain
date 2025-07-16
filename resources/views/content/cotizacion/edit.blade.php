@@ -115,7 +115,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
                                 <input type="number" class="form-control" id="validez" name="validez"
-                                    value="{{ old('validez', $cotizacion->validez) }}" min="1"/>
+                                    value="{{ old('validez', $cotizacion->validez) }}" min="1" />
                             </div>
                         </div>
 
@@ -136,6 +136,26 @@
                                 </select>
                             </div>
                         </div>
+                     <div class="col-md-6">
+    <label class="form-label" for="id_servicio">
+        <i class="fas fa-concierge-bell me-2"></i>Servicio
+    </label>
+    <div class="input-group input-group-merge">
+        <span class="input-group-text"><i class="fas fa-briefcase"></i></span>
+        <select class="form-control" id="id_servicio" name="id_servicio">
+            <option value="">Seleccione un servicio</option>
+            @foreach($servicios as $servicio)
+                <option value="{{ $servicio->id }}"
+                    {{ $cotizacion->id_servicio == $servicio->id ? 'selected' : '' }}>
+                    {{ $servicio->nombre }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+</div>
+
+
+
                     </div>
 
 
@@ -632,6 +652,13 @@ $modulosOptions .= '<option value="'.$modulo->id.'" data-precio="'.$modulo->prec
                 return false;
             }
 
+               // Validar condiciones comerciales
+            if (!$('#id_servicio').val()) {
+                $('#id_servicio').addClass('is-invalid');
+                mostrarAlertaError('Debe seleccionar Servicio', '#id_servicio');
+                return false;
+            }
+
             // Validar observaciones
             if (!$('#observaciones').val().trim()) {
                 $('#observaciones').addClass('is-invalid');
@@ -655,6 +682,7 @@ $modulosOptions .= '<option value="'.$modulo->id.'" data-precio="'.$modulo->prec
                 cliente_id: $('#cliente_id').val(),
                 validez: $('#validez').val(),
                 condiciones_comerciales: $('#condiciones_comerciales').val(),
+                id_servicio: $('#id_servicio').val(),
                 observaciones: $('#observaciones').val(),
                 productos: []
             };
@@ -740,56 +768,56 @@ $modulosOptions .= '<option value="'.$modulo->id.'" data-precio="'.$modulo->prec
 
 
 <script>
-// Variable para controlar si las observaciones han sido modificadas manualmente
-let observacionesModificadas = false;
+    // Variable para controlar si las observaciones han sido modificadas manualmente
+    let observacionesModificadas = false;
 
-// Función para actualizar observaciones
-function actualizarObservaciones() {
-    const condicionId = document.getElementById('condiciones_comerciales').value;
-    const textareaObservaciones = document.getElementById('observaciones');
-    
-    if (!condicionId) {
-        if (!observacionesModificadas) {
-            textareaObservaciones.value = '';
-        }
-        return;
-    }
-    
-    fetch(`/condiciones-comerciales/${condicionId}/descripcion`)
-        .then(response => response.json())
-        .then(data => {
-            // Solo actualizar si no han sido modificadas manualmente
+    // Función para actualizar observaciones
+    function actualizarObservaciones() {
+        const condicionId = document.getElementById('condiciones_comerciales').value;
+        const textareaObservaciones = document.getElementById('observaciones');
+
+        if (!condicionId) {
             if (!observacionesModificadas) {
-                textareaObservaciones.value = data.descripcion || '';
+                textareaObservaciones.value = '';
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-}
+            return;
+        }
 
-// Cargar al iniciar
-document.addEventListener('DOMContentLoaded', function() {
-    const textareaObservaciones = document.getElementById('observaciones');
-    const condicionId = document.getElementById('condiciones_comerciales').value;
-    
-    // Verificar si hay observaciones personalizadas
-    const tieneObservacionesPersonales = textareaObservaciones.value.trim() !== '';
-    
-    // Si no hay observaciones personales, cargar la descripción
-    if (condicionId && !tieneObservacionesPersonales) {
         fetch(`/condiciones-comerciales/${condicionId}/descripcion`)
             .then(response => response.json())
             .then(data => {
-                textareaObservaciones.value = data.descripcion || '';
+                // Solo actualizar si no han sido modificadas manualmente
+                if (!observacionesModificadas) {
+                    textareaObservaciones.value = data.descripcion || '';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
             });
     }
-    
-    // Detectar cambios manuales en las observaciones
-    textareaObservaciones.addEventListener('input', function() {
-        observacionesModificadas = true;
+
+    // Cargar al iniciar
+    document.addEventListener('DOMContentLoaded', function() {
+        const textareaObservaciones = document.getElementById('observaciones');
+        const condicionId = document.getElementById('condiciones_comerciales').value;
+
+        // Verificar si hay observaciones personalizadas
+        const tieneObservacionesPersonales = textareaObservaciones.value.trim() !== '';
+
+        // Si no hay observaciones personales, cargar la descripción
+        if (condicionId && !tieneObservacionesPersonales) {
+            fetch(`/condiciones-comerciales/${condicionId}/descripcion`)
+                .then(response => response.json())
+                .then(data => {
+                    textareaObservaciones.value = data.descripcion || '';
+                });
+        }
+
+        // Detectar cambios manuales en las observaciones
+        textareaObservaciones.addEventListener('input', function() {
+            observacionesModificadas = true;
+        });
     });
-});
 </script>
 
 @endpush

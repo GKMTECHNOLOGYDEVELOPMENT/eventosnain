@@ -24,6 +24,7 @@ use App\Models\Modulo;
 use App\Models\Observacion;
 use App\Models\Reunion;
 use App\Models\Salida;
+use App\Models\Servicio;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
@@ -106,8 +107,11 @@ class CotizacionController extends Controller
 
         $codigoCotizacion = 'CT-' . $nextId;
 
-        return view('content.cotizacion.new-cotizacion', compact('clientes', 'modulos', 'condicionesComerciales', 'codigoCotizacion'));
+        $servicios = Servicio::all();
+
+        return view('content.cotizacion.new-cotizacion', compact('clientes', 'modulos', 'condicionesComerciales', 'codigoCotizacion', 'servicios'));
     }
+
 
     public function getNextCode()
     {
@@ -177,6 +181,7 @@ class CotizacionController extends Controller
             'cliente_id' => 'required|exists:cliente,id',
             'validez' => 'required|integer|min:1',
             'condiciones_comerciales' => 'required|string|max:50',
+            'servicio_id' => 'required|integer',
             'observaciones' => 'nullable|string',
             'productos' => 'required|array|min:1',
             'productos.*.id' => 'required|exists:modulos,id',
@@ -201,6 +206,7 @@ class CotizacionController extends Controller
                 'cliente_id' => $validated['cliente_id'],
                 'validez' => $validated['validez'],
                 'condiciones_comerciales' => $validated['condiciones_comerciales'],
+                'id_servicio' => $validated['servicio_id'],
                 'observaciones' => $validated['observaciones'] ?? null,
                 'subtotal_sin_igv' => $subtotal,
                 'igv' => $igv,
@@ -361,6 +367,9 @@ class CotizacionController extends Controller
 
         // Obtener todos los módulos activos
         $modulos = Modulo::where('estado', 1)->get();
+
+            $servicios = Servicio::all(); // <-- Agregado aquí
+
         // Si quieres enviar los estados para un select
         $condicionesComerciales = DB::table('condiciones_comerciales')->get(); // O usa el modelo si lo tienes
         $estados = [
@@ -370,7 +379,8 @@ class CotizacionController extends Controller
             'vencida' => 'Vencida'
         ];
 
-        return view('content.cotizacion.edit', compact('cotizacion', 'estados', 'clientes', 'modulos', 'condicionesComerciales'));
+            $servicios = Servicio::all(); // <-- Agregado aquí
+        return view('content.cotizacion.edit', compact('cotizacion', 'estados', 'clientes', 'modulos', 'condicionesComerciales', 'servicios'));
     }
 
     public function update(Request $request, $id)
@@ -387,6 +397,7 @@ class CotizacionController extends Controller
             'cliente_id' => 'required|exists:cliente,id',
             'validez' => 'required|integer|min:1',
             'condiciones_comerciales' => 'required|string|max:50',
+            'id_servicio' => 'required|integer',
             'observaciones' => 'nullable|string',
             'productos' => 'required|array|min:1',
             'productos.*.id' => 'required|exists:modulos,id',
@@ -414,6 +425,7 @@ class CotizacionController extends Controller
                 'cliente_id' => $validated['cliente_id'],
                 'validez' => $validated['validez'],
                 'condiciones_comerciales' => $validated['condiciones_comerciales'],
+                'id_servicio' => $validated['id_servicio'],
                 'observaciones' => $validated['observaciones'] ?? null,
                 'subtotal_sin_igv' => $subtotal,
                 'igv' => $igv,
@@ -458,11 +470,14 @@ class CotizacionController extends Controller
 
         $clientes = Cliente::all(); // Todos los clientes
 
+                    $servicios = Servicio::all(); // <-- Agregado aquí
+
+
         // Obtener todos los módulos activos
         $modulos = Modulo::where('estado', 1)->get();
 
         // Retorná una vista para mostrar los detalles de la cotización, solo lectura
-        return view('content.cotizacion.show', compact('cotizacion', 'clientes', 'modulos'));
+        return view('content.cotizacion.show', compact('cotizacion', 'clientes', 'modulos', 'servicios'));
     }
 
     public function actualizarEstado(Request $request, Cotizacion $cotizacion)

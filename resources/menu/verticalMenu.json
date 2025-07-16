@@ -62,6 +62,12 @@
       "icon": "menu-icon tf-icons bx bx-file",
       "slug": "app-kanban"
     },
+       {
+      "url": "/servicios",
+      "name": "Servicios",
+      "icon": "menu-icon tf-icons bx bx-file",
+      "slug": "app-kanban"
+    },
     {
       "url": "/usuarios",
       "name": "Lista de Usuarios",

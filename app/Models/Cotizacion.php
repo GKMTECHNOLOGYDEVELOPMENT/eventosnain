@@ -17,6 +17,7 @@ class Cotizacion extends Model
         'fecha_emision',
         'cliente_id',
         'validez',
+        'id_servicio',
         'condiciones_comerciales',
         'observaciones',
         'subtotal_sin_igv',
@@ -68,5 +69,10 @@ class Cotizacion extends Model
     public function encargado()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+        public function servicio()
+    {
+        return $this->belongsTo(Servicio::class);
     }
 }

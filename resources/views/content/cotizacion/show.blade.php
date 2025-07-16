@@ -128,6 +128,24 @@
                             </div>
                         </div>
 
+                        <div class="col-md-6">
+                                <label class="form-label" for="id_servicio">
+                                    <i class="fas fa-concierge-bell me-2"></i>Servicio
+                                </label>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text"><i class="fas fa-tools"></i></span>
+                                    <select class="form-control" id="id_servicio" name="id_servicio">
+                                        <option value="">Seleccione un servicio</option>
+                                        @foreach($servicios as $servicio)
+                                            <option value="{{ $servicio->id }}"
+                                                {{ $cotizacion->id_servicio == $servicio->id ? 'selected' : '' }}>
+                                                {{ $servicio->nombre }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
 
                     </div>
 

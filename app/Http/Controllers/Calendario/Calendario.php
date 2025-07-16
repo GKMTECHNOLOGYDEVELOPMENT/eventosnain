@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\ActualizacionEventoMail;
 use App\Mail\InvitacionEventoMail;
 use App\Models\Actividad;
+use App\Models\Etiqueta;
 use App\Models\Informacion;
 use Illuminate\Http\Request;
 use App\Models\Llamada;
@@ -257,4 +258,67 @@ class Calendario extends Controller
 
         return $colores[$etiqueta] ?? '#696cff';
     }
+
+
+    // Método para obtener etiquetas
+public function getEtiquetas()
+{
+    $etiquetas = Etiqueta::where('user_id', auth()->id())->get();
+    return response()->json($etiquetas);
+}
+
+// Método para guardar etiqueta
+public function storeEtiqueta(Request $request)
+{
+    $request->validate([
+        'nombre' => 'required|string|max:255',
+        'color' => 'required|string|max:7',
+        'icono' => 'nullable|string|max:255'
+    ]);
+
+    $etiqueta = Etiqueta::create([
+        'nombre' => $request->nombre,
+        'color' => $request->color,
+        'icono' => $request->icono,
+        'user_id' => auth()->id()
+    ]);
+
+    return response()->json($etiqueta);
+}
+
+// Método para actualizar etiqueta
+public function updateEtiqueta(Request $request, $id)
+{
+    $request->validate([
+        'nombre' => 'required|string|max:255',
+        'color' => 'required|string|max:7',
+        'icono' => 'nullable|string|max:255'
+    ]);
+
+    $etiqueta = Etiqueta::where('user_id', auth()->id())
+                ->findOrFail($id);
+                
+    $etiqueta->update($request->all());
+
+    return response()->json($etiqueta);
+}
+
+// Método para eliminar etiqueta
+public function destroyEtiqueta($id)
+{
+    $etiqueta = Etiqueta::where('user_id', auth()->id())
+                ->findOrFail($id);
+                
+    $etiqueta->delete();
+
+    return response()->json(['message' => 'Etiqueta eliminada']);
+}
+
+public function showEtiqueta($id)
+{
+    $etiqueta = Etiqueta::where('user_id', auth()->id())
+                ->findOrFail($id);
+                
+    return response()->json($etiqueta);
+}
 }

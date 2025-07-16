@@ -12,6 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    
 
 </head>
 @section('title', 'Calendario')
@@ -97,31 +98,16 @@
                     </button>
 
 
-                    <!-- Mini calendario -->
-                    <div id="mini-calendar" class="mb-4"></div>
+                   <!-- Mini calendario -->
+<div id="mini-calendar" class="mb-4"></div>
 
-                    <small class="text-muted text-uppercase fw-semibold">Filtros</small>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <small class="text-muted text-uppercase fw-semibold">Etiqueta</small>
+    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEtiquetas">
+        <i class="bx bx-cog"></i> Gestionar
+    </button>
+</div>
 
-                    <div class="form-check mt-3">
-                        <input class="form-check-input border-primary bg-primary" type="checkbox" id="filtroTodo" checked>
-                        <label class="form-check-label text-primary" for="filtroTodo">Ver Todo</label>
-                    </div>
-
-                    <div class="form-check mt-2">
-                        <input class="form-check-input border-danger bg-danger" type="checkbox" id="filtroPersonal" checked>
-                        <label class="form-check-label text-danger" for="filtroPersonal">Personal</label>
-                    </div>
-
-                    <div class="form-check mt-2">
-                        <input class="form-check-input border-success bg-success" type="checkbox" id="filtroNegocios"
-                            checked>
-                        <label class="form-check-label text-success" for="filtroNegocios">Negocios</label>
-                    </div>
-
-                    <div class="form-check mt-2">
-                        <input class="form-check-input border-info bg-info" type="checkbox" id="filtroOtros" checked>
-                        <label class="form-check-label text-info" for="filtroOtros">Otros</label>
-                    </div>
 
 
                     <hr class="my-4" />
@@ -215,4 +201,7 @@
 
     <!-- Tu script -->
     <script src="{{ asset('assets/js/calendar.js') }}"></script>
+
+
+    
 @endsection

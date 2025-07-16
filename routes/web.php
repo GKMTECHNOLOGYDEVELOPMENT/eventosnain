@@ -48,6 +48,7 @@ use App\Http\Controllers\form_elements\InputGroups;
 use App\Http\Controllers\form_layouts\VerticalForm;
 use App\Http\Controllers\form_layouts\HorizontalForm;
 use App\Http\Controllers\modulo\ModuloController;
+use App\Http\Controllers\ServiciosController;
 use App\Http\Controllers\tables\Basic as TablesBasic;
 use App\Http\Controllers\usuario\UsuarioController;
 use App\Models\CondicionComercial;
@@ -110,6 +111,11 @@ Route::group(['middleware' => 'auth'], function() {
         Route::put('/eventos/{id}', [Calendario::class, 'update']);
         Route::delete('/eventos/{id}', [Calendario::class, 'destroy']);
         Route::get('/usuarios-invitados', [Calendario::class, 'getUsersForInvites']);
+        Route::get('/etiquetas/{id}', [Calendario::class, 'showEtiqueta']);
+        Route::get('/etiquetas', [Calendario::class, 'getEtiquetas']);
+        Route::post('/etiquetas', [Calendario::class, 'storeEtiqueta']);
+        Route::put('/etiquetas/{id}', [Calendario::class, 'updateEtiqueta']);
+        Route::delete('/etiquetas/{id}', [Calendario::class, 'destroyEtiqueta']);
     });
 });
 Route::post('client/events', [client::class, 'evento'])->name('events.store');
@@ -271,6 +277,16 @@ Route::get('/condiciones-comerciales/{id}/descripcion', function ($id) {
     $condicion = CondicionComercial::findOrFail($id);
     return response()->json(['descripcion' => $condicion->descripcion]);
 });
+
+//CONDICIONES
+Route::get('/servicios/Nuevo-Servicio', [ServiciosController::class, 'create'])->name('servicio-newServicios')->middleware('auth');
+Route::post('/servicios-comerciales/guardar', [ServiciosController::class, 'guardar'])->name('servicios.guardar');
+Route::get('/servicios', [serviciosController::class, 'index'])->name('servicios.index');
+Route::get('/servicios/{id}/edit', [serviciosController::class, 'edit'])->name('servicios.edit');
+Route::put('/servicios/{id}', [serviciosController::class, 'update'])->name('servicios.update');
+Route::delete('/servicios/{id}', [serviciosController::class, 'destroy'])->name('servicios.destroy');
+
+
 // User Interface
 Route::get('/ui/accordion', [Accordion::class, 'index'])->name('ui-accordion');
 Route::get('/ui/alerts', [Alerts::class, 'index'])->name('ui-alerts');
@@ -413,6 +429,7 @@ Route::post('/salida/eliminar', [client::class, 'eliminarSalida'])->name('salida
 // routes/web.php
 Route::post('/salida_user/guardar', [client::class, 'guardar'])->name('salida_user.guardar');
 Route::get('/clientes', [Client::class, 'getClientes'])->name('api.clientes')->middleware('auth');
+
 
 Route::get('/evento/{eventoId}/usuario/{usuarioId}/datos', function ($eventoId, $usuarioId) {
     // Obtener fechas para filtros temporales
@@ -1143,4 +1160,6 @@ Route::get('/metricas-productos/{eventoId?}/usuario/{usuarioId?}', function ($ev
 })
 ->where('eventoId', '[0-9]+|general')
 ->where('usuarioId', '[0-9]+|general');
+
+
 
