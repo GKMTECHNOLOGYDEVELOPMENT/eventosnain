@@ -988,6 +988,32 @@ Route::get('/cotizaciones-estado', function () {
     ]);
 });
 
+
+Route::get('/cotizaciones-total-servicio', function () {
+    $eventoId = request()->input('evento');
+    $usuarioId = request()->input('usuario');
+
+    $query = DB::table('cotizaciones')
+        ->join('servicios', 'cotizaciones.id_servicio', '=', 'servicios.id')
+        ->leftJoin('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
+        ->select('servicios.nombre as servicio', DB::raw('SUM(cotizaciones.total_con_igv) as total'));
+
+    if ($eventoId) {
+        $query->where('cliente.events_id', $eventoId);
+    }
+
+    if ($usuarioId) {
+        $query->where('cotizaciones.user_id', $usuarioId);
+    }
+
+    $resultados = $query
+        ->groupBy('servicios.nombre')
+        ->orderByDesc('total')
+        ->get();
+
+    return response()->json($resultados);
+});
+
 Route::get('/comparacion-semanal', function (Request $request) {
     $eventoId = $request->input('evento');
     $usuarioId = $request->input('usuario');
@@ -1062,44 +1088,35 @@ function getColorForService($servicio) {
         default         => '#CCCCCC',
     };
 }
-
 Route::get('/metricas-servicios/{eventoId?}/usuario/{usuarioId?}', function ($eventoId = 'general', $usuarioId = 'general') {
+    $query = DB::table('cotizaciones')
+        ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id')
+        ->join('servicios', 'cotizaciones.id_servicio', '=', 'servicios.id')
+        ->select(
+            'servicios.nombre as name',
+            DB::raw('SUM(cotizaciones.total_con_igv) as value')
+        );
 
-    $serviciosAgrupados = [
-        'MODULO'        => ['MODULO', 'MÓDULO'],
-        'CCTV'          => ['CCTV'],
-        'OTROS'         => ['OTROS'],
-        'SERVICE DESK'  => ['SERVICE DESK'],
-        'SOFTWARE'      => ['SOFTWARE'],
-    ];
+    if ($eventoId !== 'general') {
+        $query->where('cliente.events_id', $eventoId);
+    }
 
-    $datosServicios = collect($serviciosAgrupados)->map(function ($variantes, $nombreAgrupado) use ($eventoId, $usuarioId) {
-        $query = DB::table('cotizaciones')
-            ->join('cliente', 'cotizaciones.cliente_id', '=', 'cliente.id');
+    if ($usuarioId !== 'general') {
+        $query->where('cotizaciones.user_id', $usuarioId);
+    }
 
-        if ($eventoId !== 'general') {
-            $query->where('cliente.events_id', $eventoId);
-        }
-
-        if ($usuarioId !== 'general') {
-            $query->where('cotizaciones.user_id', $usuarioId);
-        }
-
-        $query->where(function ($q) use ($variantes) {
-            foreach ($variantes as $servicio) {
-                $q->orWhere('cliente.servicios', 'LIKE', "%$servicio%");
-            }
-        });
-
-        $monto = $query->sum('cotizaciones.total_con_igv');
-
-        return [
-            'name' => $nombreAgrupado,
-            'value' => round($monto, 2),
-            'itemStyle' => ['color' => getColorForService($nombreAgrupado)],
-        ];
-    })->filter(fn($item) => $item['value'] > 0) // Solo mostrar > 0
-      ->values();
+    $datosServicios = $query
+        ->groupBy('servicios.nombre')
+        ->get()
+        ->map(function ($item) {
+            return [
+                'name' => $item->name,
+                'value' => round($item->value, 2),
+                'itemStyle' => ['color' => getColorForService($item->name)],
+            ];
+        })
+        ->filter(fn($item) => $item['value'] > 0)
+        ->values();
 
     return response()->json($datosServicios);
 })

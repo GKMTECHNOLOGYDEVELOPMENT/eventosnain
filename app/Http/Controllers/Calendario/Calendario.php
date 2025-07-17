@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Calendario;
 
 use App\Http\Controllers\Controller;
 use App\Mail\ActualizacionEventoMail;
+use App\Mail\CancelacionEventoMail;
 use App\Mail\InvitacionEventoMail;
 use App\Models\Actividad;
 use App\Models\Etiqueta;
@@ -69,7 +70,7 @@ class Calendario extends Controller
                     'ubicacion' => $evento->ubicacion,
                     'descripcion' => $evento->descripcion,
                     'invitados' => $evento->invitados->pluck('id_usuarios')->toArray(),
-                                    'usuario' => $evento->user?->name, // 👈 Aquí va el nombre del usuario
+                    'usuario' => $evento->user?->name, // 👈 Aquí va el nombre del usuario
 
                     
                 ]
@@ -85,8 +86,8 @@ class Calendario extends Controller
     $request->validate([
         'titulo' => 'required|string|max:255',
         'etiqueta' => 'nullable|string|max:255',
-        'fechainicio' => 'required|date',
-        'fechafin' => 'nullable|date',
+        'fechainicio' => 'required|date_format:Y-m-d H:i:s',
+        'fechafin' => 'nullable|date_format:Y-m-d H:i:s',
         'todoeldia' => 'boolean',
         'enlaceevento' => 'nullable|url',
         'ubicacion' => 'nullable|string|max:255',
@@ -138,8 +139,8 @@ class Calendario extends Controller
         $request->validate([
             'titulo' => 'required|string|max:255',
             'etiqueta' => 'nullable|string|max:255',
-            'fechainicio' => 'required|date',
-            'fechafin' => 'nullable|date',
+           'fechainicio' => 'required|date_format:Y-m-d H:i:s', // Formato correcto
+    'fechafin' => 'nullable|date_format:Y-m-d H:i:s',
             'todoeldia' => 'boolean',
             'enlaceevento' => 'nullable|url',
             'ubicacion' => 'nullable|string|max:255',
@@ -184,20 +185,26 @@ class Calendario extends Controller
         ]);
     }
 
-    // Eliminar un evento
    public function destroy($id)
 {
-    $evento = Actividad::with('invitados')
+    $evento = Actividad::with('invitados.usuario') // Asegúrate de tener la relación 'usuario' en Invitado
         ->where('actividad_id', $id)
         ->where('user_id', auth()->id())
         ->firstOrFail();
 
-    // Primero eliminar los invitados asociados
-    if ($evento->invitados->isNotEmpty()) {
-        Invitado::where('actividad_id', $evento->actividad_id)->delete();
+    // Enviar correo a los invitados antes de eliminar
+    foreach ($evento->invitados as $invitado) {
+        $usuario = $invitado->usuario;
+        if ($usuario && $usuario->email) {
+            Mail::to($usuario->email)->queue(new CancelacionEventoMail
+            ($evento, $usuario));
+        }
     }
 
-    // Luego eliminar el evento
+    // Eliminar los invitados asociados
+    Invitado::where('actividad_id', $evento->actividad_id)->delete();
+
+    // Eliminar el evento
     $evento->delete();
 
     return response()->json([
@@ -224,40 +231,48 @@ class Calendario extends Controller
         return response()->json($users);
     }
 
-    // Helper para formatear evento para FullCalendar
-    private function formatEvento($evento)
-    {
-        return [
-            'id' => $evento->actividad_id,
-            'title' => $evento->titulo,
-            'start' => $evento->fechainicio,
-            'end' => $evento->fechafin,
-            'allDay' => (bool)$evento->todoeldia,
-            'url' => $evento->enlaceevento,
-            'color' => $this->getColorByEtiqueta($evento->etiqueta),
-            'extendedProps' => [
-                'etiqueta' => $evento->etiqueta,
-                'ubicacion' => $evento->ubicacion,
-                'descripcion' => $evento->descripcion,
-                'invitados' => $evento->invitados->pluck('id_usuarios')->toArray(),
-            ]
-        ];
+    protected function formatEvento($evento)
+{
+    $evento->loadMissing(['invitados', 'user']); // 👈 Asegura que viene el usuario
 
+    return [
+        'id' => $evento->actividad_id,
+        'title' => $evento->titulo,
+        'start' => $evento->fechainicio,
+        'end' => $evento->fechafin,
+        'allDay' => (bool)$evento->todoeldia,
+        'url' => $evento->enlaceevento,
+        'color' => $this->getColorByEtiqueta($evento->etiqueta),
+        'extendedProps' => [
+            'etiqueta' => $evento->etiqueta,
+            'ubicacion' => $evento->ubicacion,
+            'descripcion' => $evento->descripcion,
+            'invitados' => $evento->invitados->pluck('id_usuarios')->toArray(),
+            'usuario' => $evento->user?->name ?? 'Desconocido' // 👈 Aquí viene ya
+        ]
+    ];
+}
 
+private function getColorByEtiqueta($etiqueta)
+{
+    // Buscar el color en la tabla etiquetas
+    $etiquetaModel = Etiqueta::where('nombre', $etiqueta)->first();
+
+    if ($etiquetaModel && $etiquetaModel->color) {
+        return $etiquetaModel->color;
     }
 
-    // Helper para obtener color según etiqueta
-    private function getColorByEtiqueta($etiqueta)
-    {
-        $colores = [
-            'negocios' => '#0d6efd',
-            'personal' => '#dc3545',
-            'feriado' => '#198754',
-            'otros' => '#0dcaf0'
-        ];
+    // Fallback a colores hardcodeados
+    $colores = [
+        'negocios' => '#0d6efd',
+        'personal' => '#dc3545',
+        'feriado' => '#198754',
+        'otros' => '#0dcaf0'
+    ];
 
-        return $colores[$etiqueta] ?? '#696cff';
-    }
+    return $colores[$etiqueta] ?? '#696cff';
+}
+
 
 
     // Método para obtener etiquetas
@@ -303,17 +318,33 @@ public function updateEtiqueta(Request $request, $id)
     return response()->json($etiqueta);
 }
 
-// Método para eliminar etiqueta
+// Método para eliminar etiqueta con validación
 public function destroyEtiqueta($id)
 {
+    // Buscar la etiqueta del usuario autenticado
     $etiqueta = Etiqueta::where('user_id', auth()->id())
                 ->findOrFail($id);
-                
+    
+    // Verificar si la etiqueta está en uso
+    $enUso = Actividad::where('user_id', auth()->id())
+             ->where('etiqueta', $etiqueta->nombre)
+             ->exists();
+    
+    if ($enUso) {
+        return response()->json([
+            'message' => 'No se puede eliminar la etiqueta porque está en uso por alguna actividad',
+            'en_uso' => true
+        ], 422); // Código 422: Unprocessable Entity
+    }
+    
+    // Si no está en uso, proceder con la eliminación
     $etiqueta->delete();
 
-    return response()->json(['message' => 'Etiqueta eliminada']);
+    return response()->json([
+        'message' => 'Etiqueta eliminada correctamente',
+        'en_uso' => false
+    ]);
 }
-
 public function showEtiqueta($id)
 {
     $etiqueta = Etiqueta::where('user_id', auth()->id())

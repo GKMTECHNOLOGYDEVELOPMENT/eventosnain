@@ -83,7 +83,7 @@
                             </select>
                         </div>
 
-                        <!-- Filtro de Usuarios (añadido debajo) -->
+                        <!-- Filtro de Usuarios-->
                         <div class="mb-3 px-2">
                             <label for="selectUsuario" class="form-label fw-bold text-primary">
                                 <i class="fas fa-user me-1"></i> Seleccione un usuario
@@ -214,7 +214,7 @@
                     </h5>
                     <span class="badge bg-light text-dark fw-normal">Actualizado al mes</span>
                 </div>
-                <div id="treemap-servicios" style="height: 370px;"></div>
+                <div id="total-servicio-chart" style="height: 370px;"></div>
             </div>
         </div>
 

@@ -235,16 +235,33 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        flatpickr("#fechaInicio", {
-            dateFormat: "Y-m-d"
-        });
-
-        flatpickr("#fechaFin", {
-            dateFormat: "Y-m-d"
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr("#fechaInicio", {
+        enableTime: true,
+        time_24hr: true,
+        dateFormat: "Y-m-d H:i:S",
+        defaultDate: new Date(),
+        locale: 'es',
+        // Añade estas configuraciones adicionales
+        allowInput: true,
+        time_24hr: true,
+        enableSeconds: false // Si no necesitas segundos
     });
+
+    flatpickr("#fechaFin", {
+        enableTime: true,
+        time_24hr: true,
+        dateFormat: "Y-m-d H:i:S",
+        defaultDate: new Date(),
+        locale: 'es',
+        // Añade estas configuraciones adicionales
+        allowInput: true,
+        time_24hr: true,
+        enableSeconds: false // Si no necesitas segundos
+    });
+});
 </script>
+
 
 
 
