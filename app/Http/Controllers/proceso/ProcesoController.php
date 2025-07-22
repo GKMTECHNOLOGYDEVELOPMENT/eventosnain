@@ -25,7 +25,7 @@ class ProcesoController extends Controller
         ->join('cotizaciones', 'cliente.id', '=', 'cotizaciones.cliente_id')
         ->join('servicios', 'cotizaciones.id_servicio', '=', 'servicios.id')
         ->join('users', 'cotizaciones.user_id', '=', 'users.id')
-        ->where('cotizaciones.estado', 'Aprobada')
+        ->where('cotizaciones.estado', 'aprobada')
         ->whereRaw("DATE_FORMAT(cotizaciones.fecha_emision, '%Y-%m') = ?", [$mesActual])
         ->select(
             'cliente.*',
@@ -56,7 +56,7 @@ class ProcesoController extends Controller
     // Calcular total vendido por vendedor en el mes
     $totalesPorVendedor = DB::table('cotizaciones')
         ->select('user_id', DB::raw('SUM(subtotal_sin_igv) as total_vendido'))
-        ->where('estado', 'Aprobada')
+        ->where('estado', 'aprobada')
         ->whereRaw("DATE_FORMAT(fecha_emision, '%Y-%m') = ?", [$mesActual])
         ->groupBy('user_id')
         ->pluck('total_vendido', 'user_id');
@@ -91,7 +91,7 @@ public function comision()
 
     $comisiones = DB::table('cotizaciones')
         ->join('users', 'cotizaciones.user_id', '=', 'users.id')
-        ->where('cotizaciones.estado', 'Aprobada')
+        ->where('cotizaciones.estado', 'aprobada')
         ->whereRaw("DATE_FORMAT(cotizaciones.fecha_emision, '%Y-%m') = ?", [$mesActual])
         ->select(
             'users.id as vendedor_id',
