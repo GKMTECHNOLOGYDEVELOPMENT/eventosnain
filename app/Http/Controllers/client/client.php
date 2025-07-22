@@ -85,6 +85,8 @@ class Client extends Controller
   public function getClientes(Request $request)
   {
     try {
+          $user = auth()->user(); // 👈 Usuario autenticado
+
       $columns = [
         'id',
         'nombre',
@@ -100,7 +102,7 @@ class Client extends Controller
       ];
 
       // Relación con evento
-      $query = Cliente::with('evento');
+$query = Cliente::with('evento')->where('user_id', $user->id);
       $total = Cliente::count();
 
       // Filtro de búsqueda

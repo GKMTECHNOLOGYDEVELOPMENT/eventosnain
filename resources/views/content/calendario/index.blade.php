@@ -101,11 +101,14 @@
                    <!-- Mini calendario -->
 <div id="mini-calendar" class="mb-4"></div>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <small class="text-muted text-uppercase fw-semibold">Etiqueta</small>
-    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEtiquetas">
-        <i class="bx bx-cog"></i> Gestionar
-    </button>
+<div class="mb-4 text-center">
+    <small class="text-muted text-uppercase fw-semibold d-block mb-2">Etiqueta</small>
+    <div class="d-flex justify-content-center gap-2">
+        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEtiquetas">
+            <i class="bx bx-cog"></i> Gestionar
+        </button>
+        <a href="/notas" class="btn btn-sm btn-outline-secondary">Actividades</a>
+    </div>
 </div>
 
 

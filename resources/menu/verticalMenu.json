@@ -73,6 +73,19 @@
       "name": "Lista de Usuarios",
       "icon": "menu-icon tf-icons bx bx-user",
       "slug": "app-usuarios"
-    }
+    },
+    {
+      "url": "/proceso",
+      "name": "Ctes. Proceso",
+      "icon": "menu-icon tf-icons bx bx-loader",
+      "slug": "app-clientes-proceso"
+    },{
+    "url": "/comision",
+    "name": "Comisiones",
+    "icon": "menu-icon tf-icons bx bx-dollar",
+    "slug": "app-comisiones"
+  }
+
+
   ]
 }

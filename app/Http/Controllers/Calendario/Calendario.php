@@ -47,14 +47,14 @@ class Calendario extends Controller
     return view('content.calendario.index', compact('users'));
 }
  // Obtener todos los eventos para el calendario
-  public function index()
+public function index()
 {
-    $authUserId = auth()->id();
-    
-    $eventos = Actividad::where('user_id', $authUserId)
-        ->with(['invitados' => function($query) {
-            $query->select('idinvitados', 'actividad_id', 'id_usuarios');
-        }])
+    $eventos = Actividad::with([
+            'invitados' => function($query) {
+                $query->select('idinvitados', 'actividad_id', 'id_usuarios');
+            },
+            'user' // Asegúrate de tener la relación 'user' en el modelo Actividad
+        ])
         ->get()
         ->map(function($evento) {
             return [
@@ -70,24 +70,21 @@ class Calendario extends Controller
                     'ubicacion' => $evento->ubicacion,
                     'descripcion' => $evento->descripcion,
                     'invitados' => $evento->invitados->pluck('id_usuarios')->toArray(),
-                    'usuario' => $evento->user?->name, // 👈 Aquí va el nombre del usuario
-
-                    
+                    'usuario' => $evento->user?->name,
                 ]
             ];
         });
 
     return response()->json($eventos);
 }
-
     // Guardar un nuevo evento
    public function store(Request $request)
 {
     $request->validate([
         'titulo' => 'required|string|max:255',
         'etiqueta' => 'nullable|string|max:255',
-        'fechainicio' => 'required|date_format:Y-m-d H:i:s',
-        'fechafin' => 'nullable|date_format:Y-m-d H:i:s',
+        'fechainicio' => 'required|date',
+        'fechafin' => 'nullable|date',
         'todoeldia' => 'boolean',
         'enlaceevento' => 'nullable|url',
         'ubicacion' => 'nullable|string|max:255',
@@ -139,8 +136,8 @@ class Calendario extends Controller
         $request->validate([
             'titulo' => 'required|string|max:255',
             'etiqueta' => 'nullable|string|max:255',
-           'fechainicio' => 'required|date_format:Y-m-d H:i:s', // Formato correcto
-    'fechafin' => 'nullable|date_format:Y-m-d H:i:s',
+            'fechainicio' => 'required|date',
+            'fechafin' => 'nullable|date',
             'todoeldia' => 'boolean',
             'enlaceevento' => 'nullable|url',
             'ubicacion' => 'nullable|string|max:255',
@@ -185,7 +182,8 @@ class Calendario extends Controller
         ]);
     }
 
-   public function destroy($id)
+    // Eliminar un evento
+ public function destroy($id)
 {
     $evento = Actividad::with('invitados.usuario') // Asegúrate de tener la relación 'usuario' en Invitado
         ->where('actividad_id', $id)
@@ -212,6 +210,10 @@ class Calendario extends Controller
         'message' => 'Evento eliminado correctamente'
     ]);
 }
+
+
+
+
     // Obtener usuarios para invitados (excepto el autenticado)
     public function getUsersForInvites()
     {
@@ -231,28 +233,27 @@ class Calendario extends Controller
         return response()->json($users);
     }
 
-    protected function formatEvento($evento)
-{
-    $evento->loadMissing(['invitados', 'user']); // 👈 Asegura que viene el usuario
+    // Helper para formatear evento para FullCalendar
+    private function formatEvento($evento)
+    {
+        return [
+            'id' => $evento->actividad_id,
+            'title' => $evento->titulo,
+            'start' => $evento->fechainicio,
+            'end' => $evento->fechafin,
+            'allDay' => (bool)$evento->todoeldia,
+            'url' => $evento->enlaceevento,
+            'color' => $this->getColorByEtiqueta($evento->etiqueta),
+            'extendedProps' => [
+                'etiqueta' => $evento->etiqueta,
+                'ubicacion' => $evento->ubicacion,
+                'descripcion' => $evento->descripcion,
+                'invitados' => $evento->invitados->pluck('id_usuarios')->toArray(),
+            ]
+        ];
 
-    return [
-        'id' => $evento->actividad_id,
-        'title' => $evento->titulo,
-        'start' => $evento->fechainicio,
-        'end' => $evento->fechafin,
-        'allDay' => (bool)$evento->todoeldia,
-        'url' => $evento->enlaceevento,
-        'color' => $this->getColorByEtiqueta($evento->etiqueta),
-        'extendedProps' => [
-            'etiqueta' => $evento->etiqueta,
-            'ubicacion' => $evento->ubicacion,
-            'descripcion' => $evento->descripcion,
-            'invitados' => $evento->invitados->pluck('id_usuarios')->toArray(),
-            'usuario' => $evento->user?->name ?? 'Desconocido' // 👈 Aquí viene ya
-        ]
-    ];
-}
 
+    }
 private function getColorByEtiqueta($etiqueta)
 {
     // Buscar el color en la tabla etiquetas
@@ -275,10 +276,10 @@ private function getColorByEtiqueta($etiqueta)
 
 
 
-    // Método para obtener etiquetas
+// Método para obtener etiquetas
 public function getEtiquetas()
 {
-    $etiquetas = Etiqueta::where('user_id', auth()->id())->get();
+    $etiquetas = Etiqueta::all();
     return response()->json($etiquetas);
 }
 

@@ -48,7 +48,10 @@ use App\Http\Controllers\form_elements\InputGroups;
 use App\Http\Controllers\form_layouts\VerticalForm;
 use App\Http\Controllers\form_layouts\HorizontalForm;
 use App\Http\Controllers\modulo\ModuloController;
+use App\Http\Controllers\nota\NotasController;
+use App\Http\Controllers\proceso\ProcesoController;
 use App\Http\Controllers\ServiciosController;
+use App\Http\Controllers\status\StatusController;
 use App\Http\Controllers\tables\Basic as TablesBasic;
 use App\Http\Controllers\usuario\UsuarioController;
 use App\Models\CondicionComercial;
@@ -90,6 +93,8 @@ Route::post('/client/update-proceso', [client::class, 'updateproceso'])->name('c
 Route::post('/send-mail', [client::class, 'sendMail'])->name('send.mail')->middleware('auth');
 Route::post('/cliente/store', [client::class, 'atencion'])->name('client.atencion')->middleware('auth');
 //Usuarios 
+Route::get('/proceso', [ProcesoController::class, 'index'])->name('proceso.index')->middleware('auth');
+Route::get('/comision', [ProcesoController::class, 'comision'])->name('proceso.comision')->middleware('auth');
 
 Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
 Route::get('/usuarios/{id}/edit', [UsuarioController::class, 'edit'])->name('usuarios.edit');
@@ -1180,3 +1185,21 @@ Route::get('/metricas-productos/{eventoId?}/usuario/{usuarioId?}', function ($ev
 
 
 
+
+Route::middleware(['auth'])->group(function() {
+    // Rutas para tareas
+    Route::get('/notas', [NotasController::class, 'index'])->name('kanban');
+    Route::post('/tasks', [NotasController::class, 'store'])->name('tasks.store');
+    Route::get('/tasks/{task}/edit', [NotasController::class, 'edit'])->name('tasks.edit');
+    Route::put('/tasks/{task}', [NotasController::class, 'update'])->name('tasks.update');
+    Route::put('/tasks/{task}/update-status', [NotasController::class, 'updateStatus'])->name('tasks.update-status');
+    Route::delete('/tasks/{task}', [NotasController::class, 'destroy'])->name('tasks.destroy');
+    
+    // Rutas para estados
+    Route::post('/statuses', [StatusController::class, 'store'])->name('statuses.store');
+    Route::put('/statuses/{status}', [StatusController::class, 'update'])->name('statuses.update');
+        Route::get('/statuses/{status}/edit', [StatusController::class, 'edit'])->name('statuses.edit'); // Añade esta línea
+
+    Route::delete('/statuses/{status}', [StatusController::class, 'destroy'])->name('statuses.destroy');
+    Route::post('/statuses/update-order', [StatusController::class, 'updateOrder'])->name('statuses.update-order');
+});

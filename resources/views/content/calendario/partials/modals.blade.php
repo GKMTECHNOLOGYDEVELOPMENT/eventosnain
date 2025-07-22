@@ -252,28 +252,28 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+
     flatpickr("#fechaInicio", {
         enableTime: true,
         time_24hr: true,
         dateFormat: "Y-m-d H:i:S",
-        defaultDate: new Date(),
+        defaultDate: now,
+        minDate: now, // <-- aquí limitas a solo fechas futuras
         locale: 'es',
-        // Añade estas configuraciones adicionales
         allowInput: true,
-        time_24hr: true,
-        enableSeconds: false // Si no necesitas segundos
+        enableSeconds: false
     });
 
     flatpickr("#fechaFin", {
         enableTime: true,
         time_24hr: true,
         dateFormat: "Y-m-d H:i:S",
-        defaultDate: new Date(),
+        defaultDate: now,
+        minDate: now, // <-- aquí también
         locale: 'es',
-        // Añade estas configuraciones adicionales
         allowInput: true,
-        time_24hr: true,
-        enableSeconds: false // Si no necesitas segundos
+        enableSeconds: false
     });
 });
 </script>
