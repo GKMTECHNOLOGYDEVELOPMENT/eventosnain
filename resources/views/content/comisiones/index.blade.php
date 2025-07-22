@@ -89,6 +89,12 @@
             const nombres = datos.map(v => v.vendedor_nombre);
             const comisiones = datos.map(v => parseFloat(v.total_comision));
 
+            const colores = [
+                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e',
+                '#e74a3b', '#858796', '#fd7e14', '#20c997',
+                '#6f42c1', '#2c3e50', '#17a2b8', '#dc3545'
+            ];
+
             const option = {
                 title: {
                     text: 'Resumen de Comisiones por Vendedor',
@@ -102,6 +108,12 @@
                     trigger: 'axis',
                     axisPointer: {
                         type: 'shadow'
+                    },
+                    backgroundColor: '#fff',
+                    borderColor: '#ddd',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#000'
                     }
                 },
                 grid: {
@@ -127,12 +139,14 @@
                     type: 'bar',
                     data: comisiones,
                     itemStyle: {
-                        color: '#4e73df'
+                        borderRadius: [4, 4, 0, 0],
+                        color: function(params) {
+                            return colores[params.dataIndex % colores.length];
+                        }
                     },
                     barWidth: '60%'
                 }]
             };
-
             myChart.setOption(option);
             window.addEventListener('resize', () => myChart.resize());
         });
