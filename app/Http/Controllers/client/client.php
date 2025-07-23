@@ -60,25 +60,64 @@ class Client extends Controller
     return view('content.client.client-clientList', compact('clientes', 'usuarios', 'reuniones', 'observaciones'));
   }
 
+private function calcularStatus($cliente)
+{
+    $badge = 'secondary';
+    $status = 'Pendiente';
 
-  private function calcularStatus($cliente)
-  {
-    $correo = $cliente->correo;
-    $whatsapp = $cliente->whatsapp;
-    $llamada = $cliente->llamada;
-    $reunion = $cliente->reunion;
+    $reuniones = Reunion::where('cliente_id', $cliente->id)->get();
+    $ultimaReunion = $reuniones->sortByDesc('fecha_hora')->first();
 
-    // === Lógica resumida (debes adaptarla a tu lógica larga) ===
-    if ($correo === 'SI' && $whatsapp === 'SI' && $llamada === 'SI' && $reunion === 'SI') {
-      return ['status' => 'Atendido', 'badge' => 'success'];
+    $hoy = now();
+    $fechaRegistro = \Carbon\Carbon::parse($cliente->fecharegistro);
+    $diasSinContacto = $fechaRegistro->diffInDays($hoy);
+
+    // 7️⃣ Ganado / Finalizado
+    if (strtoupper($cliente->proceso) === 'SI') {
+        $status = 'Ganado';
+        $badge = 'success';
+    }
+      // 8️⃣ Perdido / No Interesado
+    else if (strtoupper($cliente->proceso) === 'NO') {
+        $status = 'Perdido';
+        $badge = 'danger';
+    }
+    // 4️⃣ En Revisión del Cliente
+    else if (!empty($cliente->proceso) && strtolower($cliente->proceso) === 'revision') {
+        $status = 'En Revisión del Cliente';
+        $badge = 'warning';
+    }
+    // 6️⃣ Reactivado (más de 30 días sin contacto y volvió a mostrar interés)
+    else if ($diasSinContacto > 30 && $cliente->correo === 'SI') {
+        $status = 'Reactivado';
+        $badge = 'info';
+    }
+    // 5️⃣ Pausa / En Espera (más de 21 días sin contacto y sin proceso)
+    else if ($diasSinContacto > 21 && empty($cliente->proceso)) {
+        $status = 'En Espera';
+        $badge = 'warning';
+    }
+    // 3️⃣ En Proceso (tiene correo y reuniones)
+    else if ($cliente->correo === 'SI' && !$reuniones->isEmpty()) {
+        $status = 'En Proceso';
+        $badge = 'warning';
+    }
+    // 2️⃣ Contactado (tiene correo, pero sin reuniones)
+    else if ($cliente->correo === 'SI' && $reuniones->isEmpty()) {
+        $status = 'Contactado';
+        $badge = 'primary';
+    }
+    // 1️⃣ Pendiente / Nuevo (sin correo ni reuniones)
+    else {
+        $status = 'Pendiente';
+        $badge = 'primary';
     }
 
-    if ($correo === 'NO' && $whatsapp === 'NO' && $llamada === 'NO' && $reunion === 'NO') {
-      return ['status' => 'Pendiente', 'badge' => 'danger'];
-    }
-
-    return ['status' => 'En Proceso', 'badge' => 'warning'];
-  }
+    return [
+        'status' => $status,
+        'badge' => $badge
+    ];
+}
 
 
 
@@ -1497,7 +1536,7 @@ public function exportarExcel(Request $request)
   {
     // Validar los datos del formulario
     $request->validate([
-      'sendNotification' => 'required|in:SI,NO'
+      'sendNotification' => 'required|in:SI,NO,REVISION'
     ]);
 
     // Buscar el cliente por ID

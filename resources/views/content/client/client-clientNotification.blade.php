@@ -210,6 +210,9 @@
                                 <option value="NO"
                                     {{ old('sendNotification', $cliente->proceso) === 'NO' ? 'selected' : '' }}>NO
                                 </option>
+                                 <option value="REVISION"
+                                    {{ old('sendREVISIONtification', $cliente->proceso) === 'REVISION' ? 'selected' : '' }}>REVISION
+                                </option>
                             </select>
                         </div>
                         <div class="mt-4">
