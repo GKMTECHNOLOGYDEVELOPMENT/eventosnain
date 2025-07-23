@@ -40,12 +40,12 @@
                         <option value="">Todos</option>
                     </select>
                 </div>
-                <div class="col-md-6">
+                {{-- <div class="col-md-6">
                     <label class="form-label fw-semibold text-secondary">Filtrar por Evento</label>
                     <select id="eventoFilter" class="form-select w-100">
                         <option value="">Todos</option>
                     </select>
-                </div>
+                </div> --}}
             </div>
 
 
@@ -60,7 +60,7 @@
                             <th>Teléfono</th>
                             <th>Servicio</th>
                             <th>Estado</th>
-                            <th>Evento</th>
+                            {{-- <th>Evento</th> --}}
                             <th>Correo</th>
                             <th class="text-center">WhatsApp</th>
                             <th class="text-center">Llamada</th>
@@ -152,17 +152,17 @@
                 });
             });
             // Filtro de eventos
-            $.get('{{ route('api.client.eventos') }}', function(data) {
-                const $eventoSelect = $('#eventoFilter');
-                data.forEach(function(evento) {
-                    $eventoSelect.append(new Option(evento.title, evento.id));
-                });
-                $eventoSelect.select2({
-                    placeholder: 'Selecciona un evento',
-                    allowClear: true,
-                    width: 'resolve'
-                });
-            });
+            // $.get('{{ route('api.client.eventos') }}', function(data) {
+            //     const $eventoSelect = $('#eventoFilter');
+            //     data.forEach(function(evento) {
+            //         $eventoSelect.append(new Option(evento.title, evento.id));
+            //     });
+            //     $eventoSelect.select2({
+            //         placeholder: 'Selecciona un evento',
+            //         allowClear: true,
+            //         width: 'resolve'
+            //     });
+            // });
 
 
             // 🔄 Inicializa DataTable con filtro por servicio
@@ -199,9 +199,9 @@
                         orderable: false,
                         searchable: false
                     },
-                    {
-                        data: 'events_id'
-                    },
+                    // {
+                    //     data: 'events_id'
+                    // },
                     {
                         data: 'correo'
                     },
@@ -252,13 +252,13 @@
     e.preventDefault();
 
     const servicio = $('#servicioFilter').val() || '';
-    const evento_id = $('#eventoFilter').val() || '';
+    // const evento_id = $('#eventoFilter').val() || '';
 
     console.log('[ExportarExcel] Botón exportar presionado');
     console.log('[ExportarExcel] Filtro - Servicio:', servicio);
-    console.log('[ExportarExcel] Filtro - Evento ID:', evento_id);
+    // console.log('[ExportarExcel] Filtro - Evento ID:', evento_id);
 
-    const url = `{{ route('client.exportar') }}?servicio=${encodeURIComponent(servicio)}&evento_id=${evento_id}`;
+    const url = `{{ route('client.exportar') }}?servicio=${encodeURIComponent(servicio)}`;
     
     console.log('[ExportarExcel] URL generada para exportar:', url);
 
