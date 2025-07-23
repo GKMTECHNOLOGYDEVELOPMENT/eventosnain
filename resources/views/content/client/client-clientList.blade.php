@@ -13,9 +13,9 @@
                 <a href="{{ route('client-newClient') }}" class="btn btn-primary">
                     <i class="bx bx-plus me-1"></i> Nuevo Cliente
                 </a>
-                <a href="#" id="btnExportar" class="btn btn-success">
+                {{-- <a href="#" id="btnExportar" class="btn btn-success">
                     <i class="bx bx-file"></i> Exportar Excel
-                </a>
+                </a> --}}
             </div>
         </div>
 
@@ -247,23 +247,5 @@
             });
 
         });
-
-      $('#btnExportar').on('click', function(e) {
-    e.preventDefault();
-
-    const servicio = $('#servicioFilter').val() || '';
-    // const evento_id = $('#eventoFilter').val() || '';
-
-    console.log('[ExportarExcel] Botón exportar presionado');
-    console.log('[ExportarExcel] Filtro - Servicio:', servicio);
-    // console.log('[ExportarExcel] Filtro - Evento ID:', evento_id);
-
-    const url = `{{ route('client.exportar') }}?servicio=${encodeURIComponent(servicio)}`;
-    
-    console.log('[ExportarExcel] URL generada para exportar:', url);
-
-    window.location.href = url;
-});
-
     </script>
 @endpush

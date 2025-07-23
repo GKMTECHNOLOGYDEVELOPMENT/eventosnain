@@ -1,6 +1,7 @@
 <div class="row">
     <!-- Clientes Registrados -->
-    <div class="col-md-6 mb-4">
+    <div class="col-12 col-sm-6 col-xl-12 mb-4">
+
         <div class="card h-100 p-3">
             <div class="card-body text-center">
                 <h6 class="text-primary mb-2">Clientes registrados</h6>
@@ -11,7 +12,8 @@
     </div>
 
     <!-- Cotizaciones Emitidas -->
-    <div class="col-md-6 mb-4">
+<div class="col-12 col-sm-6 col-xl-12 mb-4">
+
         <div class="card h-100 p-3">
             <div class="card-body text-center">
                 <h6 class="text-info mb-2">Cotizaciones emitidas</h6>
@@ -22,7 +24,8 @@
     </div>
 
     <!-- Tasa de Éxito -->
-    <div class="col-md-6 mb-4">
+<div class="col-12 col-sm-6 col-xl-12 mb-4">
+
         <div class="card h-100 p-3">
             <div class="card-body text-center">
                 <h6 class="text-success mb-2">Tasa de Éxito (%)</h6>
@@ -33,7 +36,8 @@
     </div>
 
     <!-- Cotizaciones Vencidas -->
-    <div class="col-md-6 mb-4">
+<div class="col-12 col-sm-6 col-xl-12 mb-4">
+
         <div class="card h-100 p-3">
             <div class="card-body text-center">
                 <h6 class="text-danger mb-2">Cotizaciones vencidas</h6>

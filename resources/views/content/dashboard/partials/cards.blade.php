@@ -18,18 +18,20 @@
 </style>
 
 <div class="row">
-    <div class="col-lg-8 mb-4">
+    <div class="col-12 col-xl-8 mb-4">
+
+
         <!-- ✅ TARJETA DE BIENVENIDA -->
         <div class="card mb-3"> <!-- usa mb-3 para separar las tarjetas -->
             <div class="d-flex align-items-end row">
                 <div class="col-sm-7">
-              <div class="card-body">
-    <h5 class="card-title text-primary">Hola {{ Auth::user()->name }}! 🎉</h5>
-    <p class="mb-4" id="texto-descriptivo">
-        Todos los registros tiene un total de <span class="fw-medium" id="total-clientes">0</span>
-        clientes registrados.
-    </p>
-</div>
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Hola {{ Auth::user()->name }}! 🎉</h5>
+                        <p class="mb-4" id="texto-descriptivo">
+                            Todos los registros tiene un total de <span class="fw-medium" id="total-clientes">0</span>
+                            clientes registrados.
+                        </p>
+                    </div>
                 </div>
                 <div class="col-sm-5 text-center text-sm-left">
                     <div class="card-body pb-0 px-0 px-md-4">
@@ -77,8 +79,8 @@
                             </label>
                             <select id="selectEvento" class="form-select select2 border-primary" style="width: 100%;">
                                 <option value="">Seleccione un evento</option>
-                                @foreach($eventos as $evento)
-                                <option value="{{ $evento->id }}">{{ $evento->title }}</option>
+                                @foreach ($eventos as $evento)
+                                    <option value="{{ $evento->id }}">{{ $evento->title }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -90,19 +92,19 @@
                             </label>
                             <select id="selectUsuario" class="form-select select2 border-primary" style="width: 100%;">
                                 <option value="">Seleccione un usuario</option>
-                                @foreach($usuarios as $usuario)
-                                <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                                @foreach ($usuarios as $usuario)
+                                    <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
                                 @endforeach
                             </select>
                         </div>
 
 
                         <!-- Botón de Reinicio -->
-<div class="mb-3 px-2">
-    <button id="resetFilters" class="btn btn-outline-secondary w-100">
-        <i class="fas fa-undo me-2"></i> Reiniciar filtros
-    </button>
-</div>
+                        <div class="mb-3 px-2">
+                            <button id="resetFilters" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-undo me-2"></i> Reiniciar filtros
+                            </button>
+                        </div>
 
                         <!-- Espacio para mini chart u otro contenido -->
                         <div id="growthChart" style="height: 150px;"></div>
@@ -227,7 +229,7 @@
                     </h5>
 
                     <div class="d-flex align-items-center">
-                      
+
 
                         <!-- Selector de año -->
                         <select id="anio-promedio" class="form-select form-select-sm w-auto">
@@ -253,7 +255,7 @@
     </div>
 
     <!-- COLUMNA DERECHA (KPIs) -->
-    <div class="col-lg-4 mb-4">
+    <div class="col-12 col-xl-4 mb-4">
         @include('content.dashboard.partials.charts')
     </div>
 </div>
