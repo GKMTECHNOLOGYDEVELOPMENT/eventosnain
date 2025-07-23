@@ -15,7 +15,7 @@ class ProcesoController extends Controller
     $search = $request->input('search');
 
     // Define la cuota mensual
-    $cuotaMensual = 50000;
+    $cuotaMensual = 500;
 
     // Fecha actual (puedes ajustarla por mes si lo necesitas)
     $mesActual = now()->format('Y-m');
@@ -69,7 +69,7 @@ class ProcesoController extends Controller
 
         // Solo gana comisión si pasó los 50,000
         if ($totalVendedor >= $cuotaMensual) {
-            $cliente->comision = round($cliente->subtotal_sin_igv * 0.05, 2);
+            $cliente->comision = round($cliente->subtotal_sin_igv * 0.025, 2);
         } else {
             $cliente->comision = 0.00;
         }
@@ -86,7 +86,7 @@ class ProcesoController extends Controller
 
 public function comision()
 {
-    $cuotaMensual = 50000;
+    $cuotaMensual = 500;
     $mesActual = now()->format('Y-m');
 
     $comisiones = DB::table('cotizaciones')
@@ -108,7 +108,7 @@ public function comision()
 
         // Solo comisiona si supera la cuota
         if ($vendedor->total_vendido >= $cuotaMensual) {
-            $vendedor->total_comision = round($vendedor->total_vendido * 0.05, 2);
+            $vendedor->total_comision = round($vendedor->total_vendido * 0.025, 2);
         } else {
             $vendedor->total_comision = 0.00;
         }
